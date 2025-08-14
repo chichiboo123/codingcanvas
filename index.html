@@ -29,12 +29,14 @@
   .left{ grid-column:1; border-right:1px solid var(--border); }
   .right{ grid-column:3; }
 
+  /* 분할바 */
   .splitter{
     grid-column:2; align-self:stretch;
     background:var(--border);
     cursor:col-resize;
     width:var(--splitter-w);
     position:relative; user-select:none;
+    touch-action:none; /* 터치 드래그 제스처 충돌 방지 */
   }
   .splitter::after{
     content:""; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
@@ -42,6 +44,13 @@
   }
   .splitter:hover, .splitter.dragging{ background:var(--accent); }
   .splitter.dragging::after{ background:#fff; }
+
+  /* 드래그 캡처용 오버레이 */
+  .drag-overlay{
+    position:fixed; inset:0; z-index:9999;
+    cursor:col-resize; background:transparent; /* 투명 */
+    touch-action:none;
+  }
 
   .topbar{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); background:var(--panel); }
   .logo img{ height:96px; display:block; cursor:pointer; }
@@ -273,23 +282,58 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
       setDesktop(); setAuto(true); el.root.style.setProperty('--left-col','1fr'); render();
     }
 
-    // Splitter
+    /* ===== Splitter with overlay (iframe-safe) ===== */
     function setupSplitter(){
       const s = el.splitter; if(!s) return;
       const MIN = 240;
-      function getSplitW(){ const v=getComputedStyle(document.documentElement).getPropertyValue('--splitter-w'); const n=parseInt(v,10); return isNaN(n)?8:n; }
+
+      function getSplitW(){
+        const v = getComputedStyle(document.documentElement).getPropertyValue('--splitter-w');
+        const n = parseInt(v,10); return isNaN(n)?8:n;
+      }
       function clamp(px){
         const vw = Math.max(document.documentElement.clientWidth, window.innerWidth||0);
         const max = vw - getSplitW() - 240;
         return Math.max(MIN, Math.min(px, max));
       }
       function setLeft(px){ el.root.style.setProperty('--left-col', px+'px'); localStorage.setItem('cc_v7_split', String(px)); }
-      function move(e){ const x = (e.touches? e.touches[0].clientX : e.clientX); const rect = document.body.getBoundingClientRect(); setLeft(clamp(x - rect.left)); }
-      function up(){ s.classList.remove('dragging'); window.removeEventListener('mousemove',move); window.removeEventListener('mouseup',up); window.removeEventListener('touchmove',move); window.removeEventListener('touchend',up); }
-      function down(e){ e.preventDefault(); s.classList.add('dragging'); window.addEventListener('mousemove',move); window.addEventListener('mouseup',up); window.addEventListener('touchmove',move,{passive:false}); window.addEventListener('touchend',up); }
-      s.addEventListener('mousedown',down); s.addEventListener('touchstart',down,{passive:false});
+
+      let overlay=null;
+      function move(clientX){
+        const rect = document.body.getBoundingClientRect();
+        setLeft(clamp(clientX - rect.left));
+      }
+      function onMove(e){
+        const x = (e.touches? e.touches[0].clientX : e.clientX);
+        move(x);
+      }
+      function stop(){
+        s.classList.remove('dragging');
+        if(overlay){ overlay.removeEventListener('pointermove', onMove); overlay.removeEventListener('pointerup', stop); overlay.removeEventListener('pointercancel', stop); overlay.remove(); overlay=null; }
+      }
+      function start(e){
+        e.preventDefault();
+        s.classList.add('dragging');
+        overlay = document.createElement('div');
+        overlay.className = 'drag-overlay';
+        document.body.appendChild(overlay);
+        overlay.addEventListener('pointermove', onMove);
+        overlay.addEventListener('pointerup', stop);
+        overlay.addEventListener('pointercancel', stop);
+        onMove(e); // 시작 위치 반영
+      }
+
+      s.addEventListener('pointerdown', start);
+      s.addEventListener('dblclick', ()=>{ // 더블클릭: 50:50
+        const vw = Math.max(document.documentElement.clientWidth, window.innerWidth||0);
+        setLeft(Math.round((vw - getSplitW())/2));
+      });
+
       const saved = parseInt(localStorage.getItem('cc_v7_split')||'0',10); if(saved>0) setLeft(saved);
-      window.addEventListener('resize', ()=>{ const cur = parseInt(getComputedStyle(el.root).getPropertyValue('--left-col'),10); if(!isNaN(cur)) setLeft(clamp(cur)); });
+      window.addEventListener('resize', ()=>{
+        const cur = parseInt(getComputedStyle(el.root).getPropertyValue('--left-col'),10);
+        if(!isNaN(cur)) setLeft(clamp(cur));
+      });
     }
 
     // typing debounce + tab indent
@@ -314,7 +358,7 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
 
       const hs = localStorage.getItem('cc_v7_html'); if(hs!==null) el.html.value = hs;
       const cs = localStorage.getItem('cc_v7_css');  if(cs!==null) el.css.value  = cs;
-      const jsS = localStorage.getItem('cc_v7_js');  if(jsS!==null) el.js.value  = jsS;  /* ← 오타 수정 */
+      const jsS = localStorage.getItem('cc_v7_js');  if(jsS!==null) el.js.value  = jsS;
 
       setAuto(true);
       setupSplitter();
