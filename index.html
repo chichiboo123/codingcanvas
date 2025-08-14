@@ -3,43 +3,58 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>코딩 캔버스 (Simple Icons v7)</title>
+<title>코딩 캔버스 (Coding Canvas)</title>
 <style>
   :root{
     --bg:#ffffff; --panel:#f6f7f9; --text:#1f2937; --muted:#6b7280; --border:#e5e7eb; --accent:#2563eb;
     --shadow:0 10px 20px rgba(0,0,0,.06);
-    /* 푸터 높이 변수 */
     --footer-h: 56px;
+    --splitter-w: 8px;
+    --left-col: 1fr; /* 드래그로 변경 */
   }
   html.dark{ --bg:#0b1020; --panel:#141a2f; --text:#e5e7eb; --muted:#a3acc2; --border:#2a3350; --accent:#60a5fa; --shadow:0 10px 20px rgba(0,0,0,.25); }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  /* 화면을 좌/우 두 칼럼으로, 푸터는 별도 행 */
+
+  /* 3열 레이아웃: 좌/스플리터/우 */
   body{
     margin:0; background:var(--bg); color:var(--text);
     font:14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR', Arial, sans-serif;
     min-height:100vh;
     display:grid;
-    grid-template-columns:1fr 1fr;
+    grid-template-columns: var(--left-col) var(--splitter-w) 1fr;
     grid-auto-rows:auto;
   }
-  /* 좌/우 영역을 푸터 높이를 제외한 뷰포트 높이만큼 채움 */
-  .left, .right{
-    min-height:calc(100vh - var(--footer-h));
-    display:flex; flex-direction:column; min-width:0;
+
+  .left, .right{ min-height:calc(100vh - var(--footer-h)); display:flex; flex-direction:column; min-width:0; }
+  .left{ grid-column:1; border-right:1px solid var(--border); }
+  .right{ grid-column:3; }
+
+  .splitter{
+    grid-column:2; align-self:stretch;
+    background:var(--border);
+    cursor:col-resize;
+    width:var(--splitter-w);
+    position:relative; user-select:none;
   }
-  .left{ border-right:1px solid var(--border); }
+  .splitter::after{
+    content:""; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:2px; height:28px; border-radius:2px; background:rgba(0,0,0,.18);
+  }
+  .splitter:hover, .splitter.dragging{ background:var(--accent); }
+  .splitter.dragging::after{ background:#fff; }
 
   .topbar{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); background:var(--panel); }
-  /* 로고 2배 확대 (48 → 96) */
   .logo img{ height:96px; display:block; cursor:pointer; }
   .iconbar{ display:flex; align-items:center; gap:8px; }
   .iconbtn{ border:1px solid var(--border); background:#fff0; color:var(--text); padding:10px; border-radius:12px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; min-width:42px; min-height:42px; box-shadow:var(--shadow); }
   .iconbtn:hover{ background:rgba(0,0,0,0.04) }
   .iconbtn.active{ border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent); }
   .iconbtn svg{ width:20px; height:20px; display:block; }
+
   .tabs{ display:flex; gap:6px; padding:8px 10px; border-bottom:1px solid var(--border); background:var(--panel); overflow-x:auto; scrollbar-width:thin; -webkit-overflow-scrolling:touch; }
   .tab{ border:1px solid var(--border); background:#fff0; color:var(--muted); padding:8px 12px; border-radius:10px; cursor:pointer; flex:0 0 auto; }
   .tab.active{ color:var(--accent); border-color:var(--accent); background:color-mix(in srgb, var(--accent) 8%, transparent); }
+
   .editor{ width:100%; height:100%; border:0; outline:none; padding:14px; resize:none; font:13px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, 'Fira Code', monospace; background:var(--bg); color:var(--text); }
   .hidden{ display:none }
 
@@ -48,17 +63,14 @@
   iframe{ width:100%; height:100%; border:1px solid var(--border); border-radius:12px; background:#fff; box-shadow:var(--shadow); }
   .w375{ width:375px !important; }
 
-  /* 푸터를 항상 하단에 고정(그리드의 마지막 행), 높이 고정 */
   footer{
-    grid-column:1 / -1;
-    border-top:1px solid var(--border); background:var(--panel);
+    grid-column:1 / -1; border-top:1px solid var(--border); background:var(--panel);
     height:var(--footer-h);
   }
   footer .wrap{ height:100%; display:flex; align-items:center; justify-content:center; gap:8px; padding:0 12px; text-align:center; }
   footer a{ color:inherit; text-decoration:none; }
   footer a:hover{ text-decoration:underline; }
 
-  /* Dialog */
   dialog{ border:1px solid var(--border); border-radius:12px; background:var(--bg); color:var(--text); padding:0; width:min(92vw,420px); }
   dialog::backdrop{ background:rgba(0,0,0,.35); }
   dialog header{ padding:12px 14px; border-bottom:1px solid var(--border); font-weight:700; }
@@ -67,20 +79,20 @@
   .radio-row{ display:flex; align-items:center; gap:10px; padding:8px 0; }
   .help{ color:var(--muted); font-size:12px; margin-top:6px; }
 
-  /* Mobile */
   @media (max-width: 900px){
     body{ grid-template-columns:1fr; }
-    .logo img{ height:84px; } /* 모바일에서도 2배에 맞게 */
+    .left, .right{ min-height:auto; }
+    .splitter{ display:none; }
+    .logo img{ height:84px; }
     .iconbtn{ min-width:44px; min-height:44px; }
     .editor{ font-size:14px; }
   }
 </style>
 </head>
 <body>
-  <!-- LEFT: INPUT -->
+  <!-- LEFT -->
   <section class="left">
     <div class="topbar">
-      <!-- 로고 클릭 시 완전 초기화 -->
       <a class="logo" href="#" onclick="CC.hardReset(); return false;" title="처음 화면으로">
         <img src="https://i.ibb.co/Jw8sLtRy/002-2.png" alt="Coding Canvas Logo">
       </a>
@@ -143,7 +155,10 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
     </div>
   </section>
 
-  <!-- RIGHT: PREVIEW -->
+  <!-- SPLITTER -->
+  <div id="splitter" class="splitter" title="드래그하여 폭 조절"></div>
+
+  <!-- RIGHT -->
   <section class="right">
     <div class="previewbar">
       <button id="desktop" class="iconbtn active" title="데스크톱" aria-label="데스크톱" onclick="CC.setDesktop()">
@@ -164,7 +179,6 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
     </div>
   </footer>
 
-  <!-- Download dialog -->
   <dialog id="dlDialog">
     <header>다운로드</header>
     <div class="body">
@@ -192,14 +206,12 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
       mobile: document.getElementById('mobile'),
       dlDialog: document.getElementById('dlDialog'),
       loadInput: document.getElementById('loadInput'),
+      splitter: document.getElementById('splitter'),
+      root: document.documentElement
     };
 
     let autoOn = true;
-    function setAuto(on){
-      autoOn = !!on;
-      el.autorunBtn.classList.toggle('active', autoOn);
-    }
-
+    function setAuto(on){ autoOn = !!on; el.autorunBtn.classList.toggle('active', autoOn); }
     function switchTab(which){
       document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.for===which));
       [el.html, el.css, el.js].forEach(t => t.classList.toggle('hidden', t.id!==which));
@@ -213,31 +225,18 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
 
     function setPreviewContent(docStr){
       try{
-        el.view.removeAttribute('sandbox');
-        el.view.srcdoc = docStr;
-        setTimeout(()=>{
-          let ok=false;
-          try{ ok = !!(el.view.contentDocument && el.view.contentDocument.body && el.view.contentDocument.body.childNodes.length); }catch(e){}
-          if(!ok){
-            const d = el.view.contentWindow.document;
-            d.open(); d.write(docStr); d.close();
-          }
-        }, 40);
-      }catch(e){
-        try{
-          const d = el.view.contentWindow.document;
-          d.open(); d.write(docStr); d.close();
-        }catch(e2){
-          const blob = new Blob([docStr], {type:'text/html'});
-          const url = URL.createObjectURL(blob);
-          el.view.src = url;
-          setTimeout(()=>URL.revokeObjectURL(url), 2000);
-        }
+        el.view.removeAttribute('sandbox'); el.view.srcdoc = docStr;
+        setTimeout(()=>{ try{
+          const ok = !!(el.view.contentDocument && el.view.contentDocument.body && el.view.contentDocument.body.childNodes.length);
+          if(!ok){ const d = el.view.contentWindow.document; d.open(); d.write(docStr); d.close(); }
+        }catch(_){} }, 40);
+      }catch(_){
+        try{ const d = el.view.contentWindow.document; d.open(); d.write(docStr); d.close(); }
+        catch(__){ const blob = new Blob([docStr], {type:'text/html'}); const url = URL.createObjectURL(blob); el.view.src = url; setTimeout(()=>URL.revokeObjectURL(url), 2000); }
       }
     }
 
     function render(){ setPreviewContent(buildDoc()); }
-
     function toggleAuto(){ setAuto(!autoOn); }
 
     function setThemeIcon(dark){
@@ -255,58 +254,42 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
     function setDesktop(){ el.desktop.classList.add('active'); el.mobile.classList.remove('active'); el.view.classList.remove('w375'); }
     function setMobile(){ el.mobile.classList.add('active'); el.desktop.classList.remove('active'); el.view.classList.add('w375'); }
 
-    function openDownload(){
-      if (typeof el.dlDialog.showModal === 'function') el.dlDialog.showModal();
-      else el.dlDialog.setAttribute('open', 'open'); // fallback
-    }
-    function closeDownload(){
-      if (typeof el.dlDialog.close === 'function') el.dlDialog.close();
-      else el.dlDialog.removeAttribute('open');
-    }
+    function openDownload(){ if (typeof el.dlDialog.showModal === 'function') el.dlDialog.showModal(); else el.dlDialog.setAttribute('open','open'); }
+    function closeDownload(){ if (typeof el.dlDialog.close === 'function') el.dlDialog.close(); else el.dlDialog.removeAttribute('open'); }
     function confirmDownload(){
       const fmt = (document.querySelector('input[name="fmt"]:checked')||{}).value || 'json';
-      const download = (filename, text, type)=>{
-        const blob = new Blob([text], {type});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(()=>URL.revokeObjectURL(url), 1000);
-      };
-      if(fmt==='json'){
-        const payload = { html: el.html.value, css: el.css.value, js: el.js.value };
-        download('coding-canvas.json', JSON.stringify(payload, null, 2), 'application/json');
-      }else if(fmt==='txt'){
-        const txt = ['===HTML===', el.html.value.trim(), '===CSS===', el.css.value.trim(), '===JS===', el.js.value.trim()].join('\n');
-        download('coding-canvas.txt', txt, 'text/plain');
-      }else{
-        download('coding-canvas.html', buildDoc(), 'text/html');
-      }
+      const download = (filename, text, type)=>{ const blob=new Blob([text],{type}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000); };
+      if(fmt==='json'){ download('coding-canvas.json', JSON.stringify({html:el.html.value, css:el.css.value, js:el.js.value}, null, 2), 'application/json'); }
+      else if(fmt==='txt'){ download('coding-canvas.txt', ['===HTML===',el.html.value.trim(),'===CSS===',el.css.value.trim(),'===JS===',el.js.value.trim()].join('\n'), 'text/plain'); }
+      else { download('coding-canvas.html', buildDoc(), 'text/html'); }
       closeDownload();
     }
 
-    function reset(){
-      if(!confirm('초기 상태로 되돌릴까요?')) return;
-      el.html.value = DEFAULTS.html; el.css.value = DEFAULTS.css; el.js.value = DEFAULTS.js;
-      render();
+    function reset(){ if(!confirm('초기 상태로 되돌릴까요?')) return; el.html.value=DEFAULTS.html; el.css.value=DEFAULTS.css; el.js.value=DEFAULTS.js; render(); }
+    function hardReset(){
+      ['cc_v7_html','cc_v7_css','cc_v7_js','cc_v7_theme','cc_v7_split'].forEach(k=>localStorage.removeItem(k));
+      el.html.value=DEFAULTS.html; el.css.value=DEFAULTS.css; el.js.value=DEFAULTS.js;
+      document.documentElement.classList.remove('dark'); setThemeIcon(false);
+      setDesktop(); setAuto(true); el.root.style.setProperty('--left-col','1fr'); render();
     }
 
-    /* 로고 클릭 시: 완전 초기화(로컬 저장값/테마 포함) */
-    function hardReset(){
-      // 저장값/테마 제거
-      localStorage.removeItem('cc_v7_html');
-      localStorage.removeItem('cc_v7_css');
-      localStorage.removeItem('cc_v7_js');
-      localStorage.removeItem('cc_v7_theme');
-      // 기본 코드로 복원
-      el.html.value = DEFAULTS.html; el.css.value = DEFAULTS.css; el.js.value = DEFAULTS.js;
-      // 테마: 라이트로 초기화
-      document.documentElement.classList.remove('dark');
-      setThemeIcon(false);
-      // 보기 모드/자동실행 초기화
-      setDesktop();
-      setAuto(true);
-      // 렌더
-      render();
+    // Splitter
+    function setupSplitter(){
+      const s = el.splitter; if(!s) return;
+      const MIN = 240;
+      function getSplitW(){ const v=getComputedStyle(document.documentElement).getPropertyValue('--splitter-w'); const n=parseInt(v,10); return isNaN(n)?8:n; }
+      function clamp(px){
+        const vw = Math.max(document.documentElement.clientWidth, window.innerWidth||0);
+        const max = vw - getSplitW() - 240;
+        return Math.max(MIN, Math.min(px, max));
+      }
+      function setLeft(px){ el.root.style.setProperty('--left-col', px+'px'); localStorage.setItem('cc_v7_split', String(px)); }
+      function move(e){ const x = (e.touches? e.touches[0].clientX : e.clientX); const rect = document.body.getBoundingClientRect(); setLeft(clamp(x - rect.left)); }
+      function up(){ s.classList.remove('dragging'); window.removeEventListener('mousemove',move); window.removeEventListener('mouseup',up); window.removeEventListener('touchmove',move); window.removeEventListener('touchend',up); }
+      function down(e){ e.preventDefault(); s.classList.add('dragging'); window.addEventListener('mousemove',move); window.addEventListener('mouseup',up); window.addEventListener('touchmove',move,{passive:false}); window.addEventListener('touchend',up); }
+      s.addEventListener('mousedown',down); s.addEventListener('touchstart',down,{passive:false});
+      const saved = parseInt(localStorage.getItem('cc_v7_split')||'0',10); if(saved>0) setLeft(saved);
+      window.addEventListener('resize', ()=>{ const cur = parseInt(getComputedStyle(el.root).getPropertyValue('--left-col'),10); if(!isNaN(cur)) setLeft(clamp(cur)); });
     }
 
     // typing debounce + tab indent
@@ -316,32 +299,27 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
         localStorage.setItem('cc_v7_html', el.html.value);
         localStorage.setItem('cc_v7_css',  el.css.value);
         localStorage.setItem('cc_v7_js',   el.js.value);
-        if(!autoOn) return;
-        clearTimeout(t); t = setTimeout(render, 240);
+        if(!autoOn) return; clearTimeout(t); t=setTimeout(render,240);
       });
       ed.addEventListener('keydown', (e)=>{
-        if(e.key==='Tab'){
-          e.preventDefault();
-          const s = ed.selectionStart, epos = ed.selectionEnd;
-          ed.value = ed.value.substring(0,s) + '  ' + ed.value.substring(epos);
-          ed.selectionStart = ed.selectionEnd = s+2;
-          if(autoOn){ clearTimeout(t); t = setTimeout(render, 240); }
-        }
+        if(e.key==='Tab'){ e.preventDefault(); const s=ed.selectionStart, epos=ed.selectionEnd; ed.value=ed.value.substring(0,s)+'  '+ed.value.substring(epos); ed.selectionStart=ed.selectionEnd=s+2; if(autoOn){ clearTimeout(t); t=setTimeout(render,240); } }
       });
     });
 
-    // Public API
     const DEFAULTS = { html: el.html.value, css: el.css.value, js: el.js.value };
     function init(){
       const theme = localStorage.getItem('cc_v7_theme');
       const dark = theme==='dark' || (theme!=='light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      document.documentElement.classList.toggle('dark', dark);
-      setThemeIcon(dark);
+      document.documentElement.classList.toggle('dark', dark); setThemeIcon(dark);
+
       const hs = localStorage.getItem('cc_v7_html'); if(hs!==null) el.html.value = hs;
       const cs = localStorage.getItem('cc_v7_css');  if(cs!==null) el.css.value  = cs;
-      const jsS= localStorage.getItem('cc_v7_js');   if(jsS!==null) el.js.value   = jsS;
+      const jsS = localStorage.getItem('cc_v7_js');  if(jsS!==null) el.js.value  = jsS;  /* ← 오타 수정 */
+
       setAuto(true);
+      setupSplitter();
       render();
+
       el.loadInput.addEventListener('change', (e)=>{
         const file = e.target.files && e.target.files[0]; if(!file) return;
         const ext = (file.name.split('.').pop()||'').toLowerCase();
@@ -354,35 +332,21 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
               if(typeof data.html==='string') el.html.value = data.html;
               if(typeof data.css==='string')  el.css.value  = data.css;
               if(typeof data.js==='string')   el.js.value   = data.js;
-            }else if(ext==='html' || ext==='htm'){
-              el.html.value = text;
-            }else if(ext==='css'){
-              el.css.value = text;
-            }else if(ext==='js'){
-              el.js.value = text;
-            }else{
-              const H = text.split(/===HTML===/i)[1];
-              const C = text.split(/===CSS===/i)[1];
-              const J = text.split(/===JS===/i)[1];
-              if(H && C && J){
-                const afterH = H.split(/===CSS===/i)[0];
-                const afterC = C.split(/===JS===/i)[0];
-                const afterJ = J;
-                el.html.value = afterH.trim();
-                el.css.value  = afterC.trim();
-                el.js.value   = afterJ.trim();
-              }else{
-                el.html.value = text;
-              }
+            }else if(ext==='html' || ext==='htm'){ el.html.value = text; }
+            else if(ext==='css'){ el.css.value = text; }
+            else if(ext==='js'){ el.js.value = text; }
+            else{
+              const H = text.split(/===HTML===/i)[1], C = text.split(/===CSS===/i)[1], J = text.split(/===JS===/i)[1];
+              if(H && C && J){ el.html.value = H.split(/===CSS===/i)[0].trim(); el.css.value = C.split(/===JS===/i)[0].trim(); el.js.value = J.trim(); }
+              else { el.html.value = text; }
             }
             render();
           }catch(err){ alert('파일을 읽는 중 오류: JSON/TXT/HTML/CSS/JS를 지원합니다.'); }
         };
         reader.readAsText(file); e.target.value='';
       });
-      document.addEventListener('keydown', (e)=>{
-        if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); render(); }
-      });
+
+      document.addEventListener('keydown', (e)=>{ if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); render(); } });
     }
 
     return { init, render, toggleAuto, toggleTheme, setDesktop, setMobile, switchTab, openDownload, closeDownload, confirmDownload, reset, hardReset };
