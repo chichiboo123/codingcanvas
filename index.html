@@ -4,27 +4,35 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>코딩 캔버스 (Coding Canvas)</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960' fill='%233b82f6'%3E%3Cpath d='M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H160v400Zm160-40 56-56-64-64 64-64-56-56-120 120 120 120Zm320 0 120-120-120-120-56 56 64 64-64 64 56 56Z'/%3E%3C/svg%3E" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=code_blocks" />
 <style>
   :root{
-    --bg:#ffffff; --panel:#f6f7f9; --text:#1f2937; --muted:#6b7280; --border:#e5e7eb; --accent:#2563eb;
-    --shadow:0 10px 20px rgba(0,0,0,.06);
-    --footer-h: 56px;
-    --splitter-w: 8px;
-    --left-col: 1fr;          /* 드래그로 변경 */
-    --vh: 100dvh;             /* JS가 실제 높이로 업데이트 */
+    --bg:#fafbfe; --panel:#f0f2f8; --text:#1a1d2e; --muted:#8891a5; --border:#e2e5ef; --accent:#3b82f6;
+    --shadow: 0 1px 2px rgba(0,0,0,.03), 0 4px 12px rgba(0,0,0,.05);
+    --footer-h: 48px;
+    --splitter-w: 6px;
+    --left-col: 1fr;
+    --vh: 100dvh;
     --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --radius: 10px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Fira Code', monospace;
+    --transition: 0.2s ease;
   }
-  html.dark{ --bg:#0b1020; --panel:#141a2f; --text:#e5e7eb; --muted:#a3acc2; --border:#2a3350; --accent:#60a5fa; --shadow:0 10px 20px rgba(0,0,0,.25); }
+  html.dark{
+    --bg:#0d1117; --panel:#161b22; --text:#e6edf3; --muted:#7d8590; --border:#30363d; --accent:#58a6ff;
+    --shadow: 0 1px 3px rgba(0,0,0,.12), 0 8px 24px rgba(0,0,0,.16);
+  }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
-  /* 페이지 뼈대: sticky footer 보장 */
   body{
     margin:0; background:var(--bg); color:var(--text);
-    font:14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR', Arial, sans-serif;
-    min-height:var(--vh);                 /* 모바일 100vh 버그 회피 */
+    font:14px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans KR', Arial, sans-serif;
+    min-height:var(--vh);
     display:flex; flex-direction:column;
+    transition: background var(--transition), color var(--transition);
   }
-  /* 편집 영역(좌/스플리터/우) 전용 그리드 */
+
   .app{
     flex:1; min-height:0;
     display:grid;
@@ -36,7 +44,7 @@
   .left{ grid-column:1; border-right:1px solid var(--border); }
   .right{ grid-column:3; }
 
-  /* 분할바 */
+  /* Splitter */
   .splitter{
     grid-column:2; align-self:stretch;
     background:var(--border);
@@ -44,73 +52,146 @@
     width:var(--splitter-w);
     position:relative; user-select:none;
     touch-action:none;
+    transition: background var(--transition);
   }
   .splitter::after{
     content:""; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-    width:2px; height:28px; border-radius:2px; background:rgba(0,0,0,.18);
+    width:2px; height:24px; border-radius:2px; background:var(--muted); opacity:.35;
+    transition: opacity var(--transition), background var(--transition);
   }
+  .splitter:hover::after{ opacity:.7; }
   .splitter:hover, .splitter.dragging{ background:var(--accent); }
-  .splitter.dragging::after{ background:#fff; }
+  .splitter.dragging::after{ background:#fff; opacity:1; }
 
-  /* 드래그 캡처용 오버레이 */
   .drag-overlay{
     position:fixed; inset:0; z-index:9999;
     cursor:col-resize; background:transparent;
     touch-action:none;
   }
 
-  .topbar{ position:relative; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); background:var(--panel); }
-  .logo img{ height:96px; display:block; cursor:pointer; }
-  .iconbar{ display:flex; align-items:center; gap:8px; overflow-x:auto; scrollbar-width:thin; -webkit-overflow-scrolling:touch; }
-  .iconbtn{ border:1px solid var(--border); background:#fff0; color:var(--text); padding:10px; border-radius:12px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; min-width:42px; min-height:42px; box-shadow:var(--shadow); flex:0 0 auto; }
-  .iconbtn:hover{ background:rgba(0,0,0,0.04) }
-  .iconbtn.active{ border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent); }
-  .iconbtn svg{ width:20px; height:20px; display:block; }
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:8px 14px;
+    border-bottom:1px solid var(--border);
+    background:var(--panel);
+    transition: background var(--transition), border-color var(--transition);
+  }
+  .logo img{ height:72px; display:block; cursor:pointer; transition: opacity var(--transition); }
+  .logo img:hover{ opacity:.8; }
 
-  .tabs{ display:flex; gap:6px; padding:8px 10px; border-bottom:1px solid var(--border); background:var(--panel); overflow-x:auto; scrollbar-width:thin; -webkit-overflow-scrolling:touch; }
-  .tab{ border:1px solid var(--border); background:#fff0; color:var(--muted); padding:8px 12px; border-radius:10px; cursor:pointer; flex:0 0 auto; }
-  .tab.active{ color:var(--accent); border-color:var(--accent); background:color-mix(in srgb, var(--accent) 8%, transparent); }
+  .iconbar{ display:flex; align-items:center; gap:6px; overflow-x:auto; scrollbar-width:thin; -webkit-overflow-scrolling:touch; }
+  .iconbtn{
+    border:1px solid var(--border); background:var(--bg); color:var(--text);
+    padding:8px; border-radius:var(--radius); cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:38px; min-height:38px;
+    transition: all var(--transition);
+    flex:0 0 auto;
+  }
+  .iconbtn:hover{
+    border-color:color-mix(in srgb, var(--accent) 40%, var(--border));
+    background:color-mix(in srgb, var(--accent) 6%, var(--bg));
+    box-shadow:var(--shadow);
+  }
+  .iconbtn.active{
+    border-color:var(--accent); color:var(--accent);
+    background:color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+  .iconbtn svg{ width:18px; height:18px; display:block; }
 
-  .editor{ width:100%; height:100%; border:0; outline:none; padding:14px; resize:none; font:13px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, 'Fira Code', monospace; background:var(--bg); color:var(--text); }
-  .hidden{ display:none }
+  .tabs{
+    display:flex; gap:4px; padding:6px 14px;
+    border-bottom:1px solid var(--border);
+    background:var(--panel);
+    overflow-x:auto; scrollbar-width:thin; -webkit-overflow-scrolling:touch;
+    transition: background var(--transition), border-color var(--transition);
+  }
+  .tab{
+    border:none; background:transparent; color:var(--muted);
+    padding:6px 18px; border-radius:8px; cursor:pointer;
+    font-size:13px; font-weight:500; letter-spacing:.01em;
+    transition: all var(--transition); flex:0 0 auto;
+  }
+  .tab:hover{ background:color-mix(in srgb, var(--accent) 6%, transparent); color:var(--text); }
+  .tab.active{ color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent); font-weight:600; }
 
-  .previewbar{ display:flex; align-items:center; justify-content:flex-end; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); background:var(--panel); }
-  .preview{ flex:1; display:flex; align-items:center; justify-content:center; padding:10px; overflow:auto; min-height:240px; }
-  iframe{ width:100%; height:100%; border:1px solid var(--border); border-radius:12px; background:#fff; box-shadow:var(--shadow); }
+  /* Editor with line numbers */
+  .editors{ flex:1; min-height:0; position:relative; }
+  .editor-wrap{ position:absolute; inset:0; display:flex; }
+  .editor-wrap.hidden{ display:none; }
+
+  .line-numbers{
+    width:48px; flex-shrink:0;
+    padding:14px 10px 14px 0;
+    text-align:right;
+    font:13px/1.6 var(--mono);
+    color:var(--muted);
+    background:var(--panel);
+    border-right:1px solid var(--border);
+    overflow:hidden;
+    user-select:none;
+    white-space:pre;
+    opacity:.7;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+  }
+
+  .editor{
+    flex:1; min-width:0; height:100%;
+    border:0; outline:none;
+    padding:14px;
+    resize:none;
+    font:13px/1.6 var(--mono);
+    background:var(--bg); color:var(--text);
+    transition: background var(--transition), color var(--transition);
+  }
+  .hidden{ display:none; }
+
+  .previewbar{
+    display:flex; align-items:center; justify-content:flex-end; gap:6px;
+    padding:8px 14px;
+    border-bottom:1px solid var(--border);
+    background:var(--panel);
+    transition: background var(--transition), border-color var(--transition);
+  }
+  .preview{ flex:1; display:flex; align-items:center; justify-content:center; padding:12px; overflow:auto; min-height:240px; }
+  iframe{
+    width:100%; height:100%;
+    border:1px solid var(--border); border-radius:var(--radius);
+    background:#fff; box-shadow:var(--shadow);
+  }
   .w375{ width:375px !important; }
 
   footer{
     border-top:1px solid var(--border); background:var(--panel);
     height:var(--footer-h);
-    padding-bottom:var(--safe-bottom);           /* 아이폰 하단 홈바 안전영역 */
+    padding-bottom:var(--safe-bottom);
+    transition: background var(--transition), border-color var(--transition);
   }
-  footer .wrap{ height:100%; display:flex; align-items:center; justify-content:center; gap:8px; padding:0 12px; text-align:center; }
-  footer a{ color:inherit; text-decoration:none; }
-  footer a:hover{ text-decoration:underline; }
+  footer .wrap{ height:100%; display:flex; align-items:center; justify-content:center; gap:8px; padding:0 12px; text-align:center; font-size:13px; color:var(--muted); }
+  footer a{ color:var(--muted); text-decoration:none; transition: color var(--transition); }
+  footer a:hover{ color:var(--accent); }
 
-  dialog{ border:1px solid var(--border); border-radius:12px; background:var(--bg); color:var(--text); padding:0; width:min(92vw,420px); }
-  dialog::backdrop{ background:rgba(0,0,0,.35); }
-  dialog header{ padding:12px 14px; border-bottom:1px solid var(--border); font-weight:700; }
-  dialog .body{ padding:14px; }
-  dialog .actions{ display:flex; gap:8px; justify-content:flex-end; padding:12px 14px; border-top:1px solid var(--border); }
+  dialog{ border:1px solid var(--border); border-radius:var(--radius); background:var(--bg); color:var(--text); padding:0; width:min(92vw,420px); box-shadow:0 16px 48px rgba(0,0,0,.12); }
+  dialog::backdrop{ background:rgba(0,0,0,.4); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); }
+  dialog header{ padding:14px 16px; border-bottom:1px solid var(--border); font-weight:700; font-size:15px; }
+  dialog .body{ padding:16px; }
+  dialog .actions{ display:flex; gap:8px; justify-content:flex-end; padding:12px 16px; border-top:1px solid var(--border); }
   .radio-row{ display:flex; align-items:center; gap:10px; padding:8px 0; }
-  .help{ color:var(--muted); font-size:12px; margin-top:6px; }
+  .help{ color:var(--muted); font-size:12px; margin-top:8px; }
 
-  /* 반응형: 좁은 폭에서는 1열 스택 + sticky 툴바 */
   @media (max-width: 900px){
     .app{ grid-template-columns:1fr; grid-auto-rows:auto; }
     .left, .right{ min-height:auto; }
     .splitter{ display:none; }
-    .logo img{ height:84px; }
-    .iconbtn{ min-width:44px; min-height:44px; }
-    .editor{ font-size:14px; }
+    .logo img{ height:60px; }
+    .iconbtn{ min-width:42px; min-height:42px; }
+    .editor, .line-numbers{ font-size:14px; }
     .topbar, .previewbar{ position:sticky; top:0; z-index:20; }
-    .preview{ min-height:calc(50vh - 80px); } /* 프리뷰 최소 높이 확보 */
+    .preview{ min-height:calc(50vh - 80px); }
   }
 </style>
 </head>
 <body>
-  <!-- 편집/미리보기 영역 -->
   <main class="app">
     <!-- LEFT -->
     <section class="left">
@@ -150,12 +231,17 @@
         <button class="tab" type="button" data-for="js" onclick="CC.switchTab('js')">JS</button>
       </div>
 
-      <div style="flex:1; min-height:0; position:relative;">
-        <textarea id="html" class="editor" spellcheck="false"><h1>안녕하세요!</h1>
+      <div class="editors">
+        <div class="editor-wrap" id="wrap-html">
+          <div class="line-numbers" id="htmlLines"></div>
+          <textarea id="html" class="editor" spellcheck="false"><h1>안녕하세요!</h1>
 <p>왼쪽에서 코드를 입력하고, <strong>실행</strong> 버튼을 눌러보세요.</p>
 <button onclick="showAlert()">클릭해보세요</button></textarea>
+        </div>
 
-        <textarea id="css" class="editor hidden" spellcheck="false">body{
+        <div class="editor-wrap hidden" id="wrap-css">
+          <div class="line-numbers" id="cssLines"></div>
+          <textarea id="css" class="editor" spellcheck="false">body{
   font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR', Arial, sans-serif;
   padding: 20px;
   background: #eaf3ff;
@@ -166,14 +252,18 @@ button{
   background:#2563eb; color:white; border:0; padding:10px 18px; border-radius:10px;
 }
 button:hover{ filter:brightness(.95) }</textarea>
+        </div>
 
-        <textarea id="js" class="editor hidden" spellcheck="false">function showAlert(){
+        <div class="editor-wrap hidden" id="wrap-js">
+          <div class="line-numbers" id="jsLines"></div>
+          <textarea id="js" class="editor" spellcheck="false">function showAlert(){
   const box = document.createElement('div');
   box.textContent = '버튼이 클릭되었습니다! ' + new Date().toLocaleTimeString();
   box.style.cssText = 'margin-top:20px;padding:12px;border:1px solid #93c5fd;background:#dbeafe;border-radius:10px;color:#1e40af';
   document.body.appendChild(box);
 }
 console.log('콘솔 테스트: 정상 동작');</textarea>
+        </div>
       </div>
     </section>
 
@@ -233,6 +323,9 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
       html: document.getElementById('html'),
       css: document.getElementById('css'),
       js: document.getElementById('js'),
+      htmlLines: document.getElementById('htmlLines'),
+      cssLines: document.getElementById('cssLines'),
+      jsLines: document.getElementById('jsLines'),
       view: document.getElementById('view'),
       autorunBtn: document.getElementById('autorunBtn'),
       themeIcon: document.getElementById('themeIcon'),
@@ -246,9 +339,25 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
 
     let autoOn = true;
     function setAuto(on){ autoOn = !!on; el.autorunBtn.classList.toggle('active', autoOn); }
+
     function switchTab(which){
       document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.for===which));
-      [el.html, el.css, el.js].forEach(t => t.classList.toggle('hidden', t.id!==which));
+      document.querySelectorAll('.editor-wrap').forEach(w => w.classList.toggle('hidden', w.id !== 'wrap-' + which));
+      updateLineNumbers(which);
+    }
+
+    /* ===== Line Numbers ===== */
+    function updateLineNumbers(which){
+      const ed = el[which];
+      const ln = el[which + 'Lines'];
+      if(!ed || !ln) return;
+      const count = ed.value.split('\n').length;
+      let nums = '';
+      for(let i = 1; i <= count; i++) nums += i + '\n';
+      ln.textContent = nums;
+    }
+    function updateAllLineNumbers(){
+      ['html','css','js'].forEach(updateLineNumbers);
     }
 
     function buildDoc(){
@@ -299,12 +408,19 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
       closeDownload();
     }
 
-    function reset(){ if(!confirm('초기 상태로 되돌릴까요?')) return; el.html.value=DEFAULTS.html; el.css.value=DEFAULTS.css; el.js.value=DEFAULTS.js; render(); }
+    function reset(){
+      if(!confirm('초기 상태로 되돌릴까요?')) return;
+      el.html.value=DEFAULTS.html; el.css.value=DEFAULTS.css; el.js.value=DEFAULTS.js;
+      updateAllLineNumbers();
+      render();
+    }
     function hardReset(){
       ['cc_v7_html','cc_v7_css','cc_v7_js','cc_v7_theme','cc_v7_split'].forEach(k=>localStorage.removeItem(k));
       el.html.value=DEFAULTS.html; el.css.value=DEFAULTS.css; el.js.value=DEFAULTS.js;
       document.documentElement.classList.remove('dark'); setThemeIcon(false);
-      setDesktop(); setAuto(true); el.root.style.setProperty('--left-col','1fr'); render();
+      setDesktop(); setAuto(true); el.root.style.setProperty('--left-col','1fr');
+      updateAllLineNumbers();
+      render();
     }
 
     /* ===== Splitter with overlay (iframe-safe) ===== */
@@ -314,7 +430,7 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
 
       function getSplitW(){
         const v = getComputedStyle(document.documentElement).getPropertyValue('--splitter-w');
-        const n = parseInt(v,10); return isNaN(n)?8:n;
+        const n = parseInt(v,10); return isNaN(n)?6:n;
       }
       function clamp(px){
         const vw = Math.max(document.documentElement.clientWidth, window.innerWidth||0);
@@ -345,11 +461,11 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
         overlay.addEventListener('pointermove', onMove);
         overlay.addEventListener('pointerup', stop);
         overlay.addEventListener('pointercancel', stop);
-        onMove(e); // 시작 위치 반영
+        onMove(e);
       }
 
       s.addEventListener('pointerdown', start);
-      s.addEventListener('dblclick', ()=>{ // 더블클릭: 50:50
+      s.addEventListener('dblclick', ()=>{
         const vw = Math.max(document.documentElement.clientWidth, window.innerWidth||0);
         setLeft(Math.round((vw - getSplitW())/2));
       });
@@ -361,17 +477,32 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
       });
     }
 
-    // typing debounce + tab indent
+    // typing debounce + tab indent + line numbers sync
     let t;
     [el.html, el.css, el.js].forEach(ed=>{
+      const ln = el[ed.id + 'Lines'];
+
       ed.addEventListener('input', ()=>{
         localStorage.setItem('cc_v7_html', el.html.value);
         localStorage.setItem('cc_v7_css',  el.css.value);
         localStorage.setItem('cc_v7_js',   el.js.value);
+        updateLineNumbers(ed.id);
         if(!autoOn) return; clearTimeout(t); t=setTimeout(render,240);
       });
+
+      ed.addEventListener('scroll', ()=>{
+        if(ln) ln.scrollTop = ed.scrollTop;
+      });
+
       ed.addEventListener('keydown', (e)=>{
-        if(e.key==='Tab'){ e.preventDefault(); const s=ed.selectionStart, epos=ed.selectionEnd; ed.value=ed.value.substring(0,s)+'  '+ed.value.substring(epos); ed.selectionStart=ed.selectionEnd=s+2; if(autoOn){ clearTimeout(t); t=setTimeout(render,240); } }
+        if(e.key==='Tab'){
+          e.preventDefault();
+          const s=ed.selectionStart, epos=ed.selectionEnd;
+          ed.value=ed.value.substring(0,s)+'  '+ed.value.substring(epos);
+          ed.selectionStart=ed.selectionEnd=s+2;
+          updateLineNumbers(ed.id);
+          if(autoOn){ clearTimeout(t); t=setTimeout(render,240); }
+        }
       });
     });
 
@@ -387,6 +518,7 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
 
       setAuto(true);
       setupSplitter();
+      updateAllLineNumbers();
       render();
 
       el.loadInput.addEventListener('change', (e)=>{
@@ -409,6 +541,7 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
               if(H && C && J){ el.html.value = H.split(/===CSS===/i)[0].trim(); el.css.value = C.split(/===JS===/i)[0].trim(); el.js.value = J.trim(); }
               else { el.html.value = text; }
             }
+            updateAllLineNumbers();
             render();
           }catch(err){ alert('파일을 읽는 중 오류: JSON/TXT/HTML/CSS/JS를 지원합니다.'); }
         };
