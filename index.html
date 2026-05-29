@@ -2,286 +2,500 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="description" content="코딩 캔버스 - 브라우저에서 HTML·CSS·JS를 바로 작성하고 결과와 콘솔을 실시간으로 확인하는 코드 테스트 플랫폼" />
 <title>코딩 캔버스 (Coding Canvas)</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960' fill='%233b82f6'%3E%3Cpath d='M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H160v400Zm160-40 56-56-64-64 64-64-56-56-120 120 120 120Zm320 0 120-120-120-120-56 56 64 64-64 64 56 56Z'/%3E%3C/svg%3E" type="image/svg+xml">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=code_blocks" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960' fill='%236366f1'%3E%3Cpath d='M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H160v400Zm160-40 56-56-64-64 64-64-56-56-120 120 120 120Zm320 0 120-120-120-120-56 56 64 64-64 64 56 56Z'/%3E%3C/svg%3E" type="image/svg+xml">
 <style>
+  /* ===================== 디자인 토큰 ===================== */
   :root{
-    --bg:#fafbfe; --panel:#f0f2f8; --text:#1a1d2e; --muted:#8891a5; --border:#e2e5ef; --accent:#3b82f6;
-    --shadow: 0 1px 2px rgba(0,0,0,.03), 0 4px 12px rgba(0,0,0,.05);
-    --footer-h: 48px;
-    --splitter-w: 6px;
+    --bg:#f6f7f9; --surface:#ffffff; --surface-2:#f0f2f7; --surface-3:#e9ecf3;
+    --text:#0f1729; --muted:#697086; --border:#e4e7ef;
+    --accent:#6366f1; --accent-2:#4f46e5; --accent-soft:rgba(99,102,241,.10);
+    --ok:#16a34a; --warn:#d97706; --err:#dc2626; --info:#2563eb;
+    --shadow-sm: 0 1px 2px rgba(15,23,41,.04), 0 1px 3px rgba(15,23,41,.06);
+    --shadow-md: 0 4px 12px rgba(15,23,41,.06), 0 2px 4px rgba(15,23,41,.04);
+    --shadow-lg: 0 24px 60px rgba(15,23,41,.18);
+    --footer-h: 46px;
+    --splitter-w: 8px;
     --left-col: 1fr;
     --vh: 100dvh;
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --radius: 10px;
-    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Fira Code', monospace;
-    --transition: 0.2s ease;
+    --radius-lg: 14px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Fira Code', 'D2Coding', monospace;
+    --sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans KR', Arial, sans-serif;
+    --transition: .18s ease;
   }
   html.dark{
-    --bg:#0d1117; --panel:#161b22; --text:#e6edf3; --muted:#7d8590; --border:#30363d; --accent:#58a6ff;
-    --shadow: 0 1px 3px rgba(0,0,0,.12), 0 8px 24px rgba(0,0,0,.16);
+    --bg:#0b0e14; --surface:#11151d; --surface-2:#161b25; --surface-3:#1d2430;
+    --text:#e6e9f2; --muted:#8b93a8; --border:#262d3a;
+    --accent:#818cf8; --accent-2:#a5b4fc; --accent-soft:rgba(129,140,248,.14);
+    --ok:#4ade80; --warn:#fbbf24; --err:#f87171; --info:#60a5fa;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.3);
+    --shadow-md: 0 4px 14px rgba(0,0,0,.35);
+    --shadow-lg: 0 24px 60px rgba(0,0,0,.55);
   }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  ::selection{ background:var(--accent-soft); }
 
   body{
     margin:0; background:var(--bg); color:var(--text);
-    font:14px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans KR', Arial, sans-serif;
+    font:14px/1.5 var(--sans);
     min-height:var(--vh);
     display:flex; flex-direction:column;
     transition: background var(--transition), color var(--transition);
   }
 
+  /* ===================== 레이아웃 ===================== */
   .app{
     flex:1; min-height:0;
     display:grid;
     grid-template-columns: var(--left-col) var(--splitter-w) 1fr;
-    grid-auto-rows:auto;
   }
+  .left, .right{
+    height:calc(var(--vh) - var(--footer-h));
+    display:flex; flex-direction:column; min-width:0; overflow:hidden;
+  }
+  .left{ grid-column:1; border-right:1px solid var(--border); background:var(--surface); }
+  .right{ grid-column:3; background:var(--surface); }
 
-  .left, .right{ min-height:calc(var(--vh) - var(--footer-h)); display:flex; flex-direction:column; min-width:0; }
-  .left{ grid-column:1; border-right:1px solid var(--border); }
-  .right{ grid-column:3; }
-
-  /* Splitter */
+  /* ===================== 스플리터 ===================== */
   .splitter{
     grid-column:2; align-self:stretch;
-    background:var(--border);
-    cursor:col-resize;
-    width:var(--splitter-w);
-    position:relative; user-select:none;
-    touch-action:none;
+    background:var(--surface-2);
+    cursor:col-resize; width:var(--splitter-w);
+    position:relative; user-select:none; touch-action:none;
     transition: background var(--transition);
   }
   .splitter::after{
     content:""; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-    width:2px; height:24px; border-radius:2px; background:var(--muted); opacity:.35;
+    width:3px; height:30px; border-radius:3px; background:var(--muted); opacity:.3;
     transition: opacity var(--transition), background var(--transition);
   }
-  .splitter:hover::after{ opacity:.7; }
-  .splitter:hover, .splitter.dragging{ background:var(--accent); }
-  .splitter.dragging::after{ background:#fff; opacity:1; }
+  .splitter:hover::after{ opacity:.6; }
+  .splitter:hover, .splitter.dragging{ background:var(--accent-soft); }
+  .splitter.dragging::after{ background:var(--accent); opacity:1; }
+  .drag-overlay{ position:fixed; inset:0; z-index:9999; cursor:col-resize; background:transparent; touch-action:none; }
 
-  .drag-overlay{
-    position:fixed; inset:0; z-index:9999;
-    cursor:col-resize; background:transparent;
-    touch-action:none;
-  }
-
-  .topbar{
-    display:flex; align-items:center; justify-content:space-between; gap:8px;
-    padding:8px 14px;
-    border-bottom:1px solid var(--border);
-    background:var(--panel);
+  /* ===================== 상단바 ===================== */
+  .topbar, .previewbar{
+    display:flex; align-items:center; gap:10px;
+    padding:8px 12px; min-height:56px;
+    border-bottom:1px solid var(--border); background:var(--surface);
     transition: background var(--transition), border-color var(--transition);
   }
-  .logo img{ height:72px; display:block; cursor:pointer; transition: opacity var(--transition); }
-  .logo img:hover{ opacity:.8; }
+  .topbar{ justify-content:space-between; }
+  .brand{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .logo{ display:flex; align-items:center; cursor:pointer; border-radius:8px; transition: opacity var(--transition); }
+  .logo:hover{ opacity:.78; }
+  .logo img{ height:38px; display:block; }
+  .brand .wordmark{ font-weight:700; font-size:15px; letter-spacing:-.01em; white-space:nowrap; }
+  .brand .wordmark small{ display:block; font-weight:500; font-size:11px; color:var(--muted); letter-spacing:.02em; }
 
-  .iconbar{ display:flex; align-items:center; gap:6px; overflow-x:auto; scrollbar-width:thin; -webkit-overflow-scrolling:touch; }
+  .iconbar{ display:flex; align-items:center; gap:4px; overflow-x:auto; scrollbar-width:thin; -webkit-overflow-scrolling:touch; }
+  .iconbar::-webkit-scrollbar{ height:0; }
+  .sep{ width:1px; height:24px; background:var(--border); margin:0 2px; flex:0 0 auto; }
+
   .iconbtn{
-    border:1px solid var(--border); background:var(--bg); color:var(--text);
+    position:relative;
+    border:1px solid transparent; background:transparent; color:var(--muted);
     padding:8px; border-radius:var(--radius); cursor:pointer;
     display:inline-flex; align-items:center; justify-content:center;
-    min-width:38px; min-height:38px;
+    min-width:38px; min-height:38px; flex:0 0 auto;
     transition: all var(--transition);
-    flex:0 0 auto;
   }
-  .iconbtn:hover{
-    border-color:color-mix(in srgb, var(--accent) 40%, var(--border));
-    background:color-mix(in srgb, var(--accent) 6%, var(--bg));
-    box-shadow:var(--shadow);
-  }
-  .iconbtn.active{
-    border-color:var(--accent); color:var(--accent);
-    background:color-mix(in srgb, var(--accent) 10%, transparent);
-  }
-  .iconbtn svg{ width:18px; height:18px; display:block; }
+  .iconbtn:hover{ background:var(--surface-2); color:var(--text); }
+  .iconbtn:active{ transform:scale(.94); }
+  .iconbtn.active{ background:var(--accent-soft); color:var(--accent); }
+  .iconbtn:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+  .iconbtn svg{ width:19px; height:19px; display:block; }
+  @keyframes runflash{ 0%{ box-shadow:0 0 0 0 var(--accent-soft);} 100%{ box-shadow:0 0 0 8px transparent;} }
+  .iconbtn.flash{ animation:runflash .4s ease; color:var(--accent); }
 
+  /* 알림 점(콘솔 에러) */
+  .iconbtn .dot{ position:absolute; top:5px; right:5px; width:7px; height:7px; border-radius:50%; background:var(--err); display:none; box-shadow:0 0 0 2px var(--surface); }
+  .iconbtn.has-error .dot{ display:block; }
+
+  /* ===================== 탭 ===================== */
   .tabs{
-    display:flex; gap:4px; padding:6px 14px;
-    border-bottom:1px solid var(--border);
-    background:var(--panel);
-    overflow-x:auto; scrollbar-width:thin; -webkit-overflow-scrolling:touch;
-    transition: background var(--transition), border-color var(--transition);
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:8px 12px; border-bottom:1px solid var(--border); background:var(--surface);
   }
+  .tabgroup{ display:flex; gap:4px; overflow-x:auto; scrollbar-width:none; }
+  .tabgroup::-webkit-scrollbar{ display:none; }
   .tab{
+    display:flex; align-items:center; gap:7px;
     border:none; background:transparent; color:var(--muted);
-    padding:6px 18px; border-radius:8px; cursor:pointer;
-    font-size:13px; font-weight:500; letter-spacing:.01em;
+    padding:7px 14px; border-radius:8px; cursor:pointer;
+    font-size:13px; font-weight:600; letter-spacing:.01em;
     transition: all var(--transition); flex:0 0 auto;
   }
-  .tab:hover{ background:color-mix(in srgb, var(--accent) 6%, transparent); color:var(--text); }
-  .tab.active{ color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent); font-weight:600; }
+  .tab .tdot{ width:8px; height:8px; border-radius:2px; }
+  .tab[data-for="html"] .tdot{ background:#e44d26; }
+  .tab[data-for="css"]  .tdot{ background:#2965f1; }
+  .tab[data-for="js"]   .tdot{ background:#f0db4f; }
+  .tab:hover{ background:var(--surface-2); color:var(--text); }
+  .tab.active{ color:var(--text); background:var(--surface-2); box-shadow:inset 0 -2px 0 var(--accent); }
 
-  /* Editor with line numbers */
-  .editors{ flex:1; min-height:0; position:relative; }
+  .minibtn{
+    border:1px solid var(--border); background:var(--surface); color:var(--muted);
+    padding:6px 10px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600;
+    display:inline-flex; align-items:center; gap:6px; flex:0 0 auto;
+    transition: all var(--transition); font-family:var(--sans);
+  }
+  .minibtn:hover{ border-color:var(--accent); color:var(--accent); }
+  .minibtn svg{ width:15px; height:15px; }
+
+  /* ===================== 에디터 ===================== */
+  .editors{ flex:1; min-height:0; position:relative; overflow:hidden; }
   .editor-wrap{ position:absolute; inset:0; display:flex; }
   .editor-wrap.hidden{ display:none; }
 
   .line-numbers{
-    width:48px; flex-shrink:0;
-    padding:14px 10px 14px 0;
-    text-align:right;
-    font:13px/1.6 var(--mono);
-    color:var(--muted);
-    background:var(--panel);
-    border-right:1px solid var(--border);
-    overflow:hidden;
-    user-select:none;
-    white-space:pre;
-    opacity:.7;
+    width:52px; flex-shrink:0;
+    padding:14px 8px 14px 0; text-align:right;
+    font:13px/1.6 var(--mono); color:var(--muted);
+    background:var(--surface-2); border-right:1px solid var(--border);
+    overflow:hidden; user-select:none; white-space:pre; opacity:.65;
     transition: background var(--transition), color var(--transition), border-color var(--transition);
   }
-
   .editor{
     flex:1; min-width:0; height:100%;
-    border:0; outline:none;
-    padding:14px;
-    resize:none;
-    font:13px/1.6 var(--mono);
-    background:var(--bg); color:var(--text);
+    border:0; outline:none; padding:14px; resize:none;
+    font:13px/1.6 var(--mono); tab-size:2;
+    background:var(--surface); color:var(--text);
+    white-space:pre; overflow:auto;
     transition: background var(--transition), color var(--transition);
   }
-  .hidden{ display:none; }
+  .editor::placeholder{ color:var(--muted); }
 
-  .previewbar{
-    display:flex; align-items:center; justify-content:flex-end; gap:6px;
-    padding:8px 14px;
-    border-bottom:1px solid var(--border);
-    background:var(--panel);
-    transition: background var(--transition), border-color var(--transition);
+  /* 상태바 */
+  .statusbar{
+    flex:0 0 auto; display:flex; align-items:center; gap:10px;
+    height:30px; padding:0 14px;
+    border-top:1px solid var(--border); background:var(--surface-2);
+    font:11px/1 var(--mono); color:var(--muted); white-space:nowrap; overflow-x:auto; scrollbar-width:none;
   }
-  .preview{ flex:1; display:flex; align-items:center; justify-content:center; padding:12px; overflow:auto; min-height:240px; }
+  .statusbar::-webkit-scrollbar{ display:none; }
+  .statusbar .pill{ color:var(--accent); font-weight:700; }
+  .statusbar .s-sep{ opacity:.4; }
+
+  .hidden{ display:none !important; }
+
+  /* ===================== 미리보기 ===================== */
+  .previewbar{ justify-content:space-between; }
+  .previewbar .pv-label{ font-weight:700; font-size:13px; color:var(--muted); display:flex; align-items:center; gap:8px; }
+  .previewbar .pv-actions{ display:flex; align-items:center; gap:4px; }
+
+  .preview{ flex:1; min-height:0; display:flex; align-items:stretch; justify-content:center; padding:14px; overflow:auto; background:var(--surface-2); }
   iframe{
-    width:100%; height:100%;
-    border:1px solid var(--border); border-radius:var(--radius);
-    background:#fff; box-shadow:var(--shadow);
+    width:100%; height:100%; border:0; border-radius:var(--radius-lg);
+    background:#fff; box-shadow:var(--shadow-md);
   }
-  .w375{ width:375px !important; }
+  .preview.is-mobile{ align-items:flex-start; }
+  .preview.is-mobile iframe{ width:375px !important; max-width:100%; flex:0 0 auto; }
 
+  /* ===================== 콘솔 ===================== */
+  .console{
+    flex:0 0 auto; height:210px; display:flex; flex-direction:column;
+    border-top:1px solid var(--border); background:var(--surface);
+  }
+  .console.hidden{ display:none !important; }
+  .console-head{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:7px 12px; border-bottom:1px solid var(--border); background:var(--surface-2);
+  }
+  .console-title{ display:flex; align-items:center; gap:8px; font-weight:700; font-size:12px; color:var(--text); }
+  .console-title svg{ width:15px; height:15px; color:var(--muted); }
+  .badge{
+    display:none; align-items:center; justify-content:center;
+    min-width:18px; height:18px; padding:0 5px; border-radius:9px;
+    background:var(--surface-3); color:var(--muted); font:11px/1 var(--mono); font-weight:700;
+  }
+  .badge.err{ background:var(--err); color:#fff; }
+  .console-actions{ display:flex; gap:4px; }
+  .console-body{
+    flex:1; min-height:0; overflow:auto; padding:6px 0;
+    font:12px/1.55 var(--mono);
+  }
+  .cline{
+    padding:4px 12px 4px 30px; position:relative;
+    border-bottom:1px solid color-mix(in srgb, var(--border) 50%, transparent);
+    white-space:pre-wrap; word-break:break-word; color:var(--text);
+  }
+  .cline::before{ position:absolute; left:12px; top:4px; font-size:11px; opacity:.8; }
+  .cline.log::before, .cline.debug::before{ content:"›"; color:var(--muted); }
+  .cline.info{ color:var(--info); } .cline.info::before{ content:"ℹ"; color:var(--info); }
+  .cline.warn{ color:var(--warn); background:color-mix(in srgb, var(--warn) 8%, transparent); } .cline.warn::before{ content:"▲"; color:var(--warn); }
+  .cline.error{ color:var(--err); background:color-mix(in srgb, var(--err) 8%, transparent); } .cline.error::before{ content:"✕"; color:var(--err); }
+  .cline.sys{ color:var(--muted); font-style:italic; } .cline.sys::before{ content:""; }
+  .console-empty{ padding:16px 14px; color:var(--muted); font:12px/1.5 var(--mono); }
+
+  /* ===================== 푸터 ===================== */
   footer{
-    border-top:1px solid var(--border); background:var(--panel);
-    height:var(--footer-h);
-    padding-bottom:var(--safe-bottom);
+    border-top:1px solid var(--border); background:var(--surface);
+    height:var(--footer-h); padding-bottom:var(--safe-bottom);
     transition: background var(--transition), border-color var(--transition);
   }
-  footer .wrap{ height:100%; display:flex; align-items:center; justify-content:center; gap:8px; padding:0 12px; text-align:center; font-size:13px; color:var(--muted); }
+  footer .wrap{ height:100%; display:flex; align-items:center; justify-content:center; gap:8px; padding:0 12px; text-align:center; font-size:12px; color:var(--muted); }
   footer a{ color:var(--muted); text-decoration:none; transition: color var(--transition); }
   footer a:hover{ color:var(--accent); }
 
-  dialog{ border:1px solid var(--border); border-radius:var(--radius); background:var(--bg); color:var(--text); padding:0; width:min(92vw,420px); box-shadow:0 16px 48px rgba(0,0,0,.12); }
-  dialog::backdrop{ background:rgba(0,0,0,.4); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); }
-  dialog header{ padding:14px 16px; border-bottom:1px solid var(--border); font-weight:700; font-size:15px; }
-  dialog .body{ padding:16px; }
-  dialog .actions{ display:flex; gap:8px; justify-content:flex-end; padding:12px 16px; border-top:1px solid var(--border); }
-  .radio-row{ display:flex; align-items:center; gap:10px; padding:8px 0; }
-  .help{ color:var(--muted); font-size:12px; margin-top:8px; }
-
-  @media (max-width: 900px){
-    .app{ grid-template-columns:1fr; grid-auto-rows:auto; }
-    .left, .right{ min-height:auto; }
-    .splitter{ display:none; }
-    .logo img{ height:60px; }
-    .iconbtn{ min-width:42px; min-height:42px; }
-    .editor, .line-numbers{ font-size:14px; }
-    .topbar, .previewbar{ position:sticky; top:0; z-index:20; }
-    .preview{ min-height:calc(50vh - 80px); }
+  /* ===================== 다이얼로그 공통 ===================== */
+  dialog{
+    border:1px solid var(--border); border-radius:var(--radius-lg);
+    background:var(--surface); color:var(--text); padding:0;
+    box-shadow:var(--shadow-lg);
   }
+  dialog::backdrop{ background:rgba(10,12,20,.45); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); }
+  dialog[open]{ animation:dlgin .2s ease; }
+  @keyframes dlgin{ from{ opacity:0; transform:translateY(8px) scale(.98);} to{ opacity:1; transform:none; } }
+  dialog header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px; border-bottom:1px solid var(--border); font-weight:700; font-size:15px;
+  }
+  dialog header .x{ border:0; background:transparent; color:var(--muted); cursor:pointer; font-size:22px; line-height:1; padding:2px 6px; border-radius:8px; }
+  dialog header .x:hover{ background:var(--surface-2); color:var(--text); }
+  .actions{ display:flex; gap:8px; justify-content:flex-end; padding:14px 18px; border-top:1px solid var(--border); }
+  .btn{
+    border:1px solid var(--border); background:var(--surface); color:var(--text);
+    padding:9px 16px; border-radius:10px; cursor:pointer; font-size:13px; font-weight:600;
+    font-family:var(--sans); transition: all var(--transition);
+  }
+  .btn:hover{ background:var(--surface-2); }
+  .btn.primary{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .btn.primary:hover{ background:var(--accent-2); }
+
+  /* 다운로드 다이얼로그 */
+  #dlDialog{ width:min(92vw,440px); }
+  #dlDialog .body{ padding:8px 18px 18px; }
+  .radio-row{ display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; margin-top:8px; cursor:pointer; transition: all var(--transition); }
+  .radio-row:hover{ border-color:var(--accent); }
+  .radio-row input{ margin-top:2px; accent-color:var(--accent); }
+  .radio-row .rt{ font-weight:600; }
+  .radio-row .rd{ color:var(--muted); font-size:12px; margin-top:2px; }
+
+  /* ===================== 학습 다이얼로그 ===================== */
+  #learnDialog{ width:min(94vw,720px); max-height:88vh; }
+  #learnDialog[open]{ display:flex; flex-direction:column; }
+  .ltabs{ display:flex; gap:4px; padding:10px 16px 0; border-bottom:1px solid var(--border); overflow-x:auto; scrollbar-width:none; }
+  .ltabs::-webkit-scrollbar{ display:none; }
+  .ltab{
+    border:0; background:transparent; color:var(--muted);
+    padding:9px 14px; border-radius:8px 8px 0 0; cursor:pointer;
+    font-size:13px; font-weight:600; white-space:nowrap; border-bottom:2px solid transparent; margin-bottom:-1px;
+    transition: all var(--transition);
+  }
+  .ltab:hover{ color:var(--text); }
+  .ltab.active{ color:var(--accent); border-bottom-color:var(--accent); }
+  .lbody{ padding:18px 20px; overflow:auto; }
+  .lpane h3{ margin:0 0 6px; font-size:17px; }
+  .lpane h4{ margin:20px 0 6px; font-size:14px; color:var(--accent); }
+  .lpane p{ margin:6px 0; color:var(--text); }
+  .lpane pre{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:10px;
+    padding:12px 14px; overflow:auto; font:12.5px/1.6 var(--mono); margin:8px 0;
+  }
+  .lpane code{ font-family:var(--mono); font-size:.92em; }
+  .lpane p code, .lpane td code{ background:var(--surface-2); padding:1px 6px; border-radius:6px; }
+  .lpane .tip{ background:var(--accent-soft); border-left:3px solid var(--accent); padding:10px 14px; border-radius:0 10px 10px 0; color:var(--text); font-size:13px; }
+  table.ref{ width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }
+  table.ref td{ padding:8px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+  table.ref td:first-child{ white-space:nowrap; width:1%; }
+  kbd{ font-family:var(--mono); font-size:11px; background:var(--surface-2); border:1px solid var(--border); border-bottom-width:2px; border-radius:6px; padding:2px 7px; }
+  .iconhelp{ margin:8px 0; padding-left:18px; color:var(--text); } .iconhelp li{ margin:5px 0; }
+
+  /* 예제 카드 */
+  .examples{ display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:12px; }
+  .excard{ border:1px solid var(--border); border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:6px; transition: all var(--transition); }
+  .excard:hover{ border-color:var(--accent); box-shadow:var(--shadow-sm); transform:translateY(-2px); }
+  .excard .extitle{ font-weight:700; font-size:14px; }
+  .excard .exdesc{ color:var(--muted); font-size:12px; flex:1; }
+  .excard .btn{ margin-top:6px; width:100%; text-align:center; }
+
+  /* ===================== 토스트 ===================== */
+  .toast{
+    position:fixed; left:50%; bottom:64px; transform:translate(-50%, 16px);
+    background:var(--text); color:var(--bg);
+    padding:10px 18px; border-radius:999px; font-size:13px; font-weight:600;
+    box-shadow:var(--shadow-lg); opacity:0; pointer-events:none; z-index:10000;
+    transition: opacity var(--transition), transform var(--transition);
+  }
+  .toast.show{ opacity:1; transform:translate(-50%, 0); }
+
+  /* ===================== 반응형 ===================== */
+  @media (max-width: 900px){
+    .app{ display:flex; flex-direction:column; }
+    .left, .right{ height:auto; overflow:visible; width:100%; }
+    .left{ border-right:0; border-bottom:1px solid var(--border); }
+    .splitter{ display:none; }
+    .brand .wordmark{ display:none; }
+    .logo img{ height:34px; }
+    .iconbtn{ min-width:40px; min-height:40px; }
+    .editors{ flex:0 0 auto; height:46vh; }
+    .editor, .line-numbers{ font-size:14px; }
+    .preview{ flex:0 0 auto; height:46vh; min-height:38vh; }
+    .console{ height:30vh; }
+    .topbar, .previewbar{ position:sticky; top:0; z-index:20; min-height:52px; }
+  }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
 </style>
 </head>
 <body>
   <main class="app">
-    <!-- LEFT -->
+    <!-- ================= LEFT : 코드 ================= -->
     <section class="left">
       <div class="topbar">
-        <a class="logo" href="#" onclick="CC.hardReset(); return false;" title="처음 화면으로">
-          <img src="https://i.ibb.co/Jw8sLtRy/002-2.png" alt="Coding Canvas Logo">
-        </a>
+        <div class="brand">
+          <a class="logo" href="#" onclick="CC.hardReset(); return false;" title="처음 화면으로 (전체 초기화)" aria-label="처음 화면으로">
+            <img src="https://i.ibb.co/Jw8sLtRy/002-2.png" alt="Coding Canvas 로고" onerror="this.style.display='none'">
+          </a>
+          <div class="wordmark">코딩 캔버스<small>Coding Canvas</small></div>
+        </div>
         <div class="iconbar">
-          <button id="run" class="iconbtn" title="실행" aria-label="실행" onclick="CC.render()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21 5,3" fill="currentColor"></polygon></svg>
+          <button id="run" class="iconbtn" title="실행 (Ctrl/⌘+Enter)" aria-label="실행" onclick="CC.run()">
+            <svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20" fill="currentColor"></polygon></svg>
           </button>
-          <button id="autorunBtn" class="iconbtn" title="자동실행" aria-label="자동실행(토글)" onclick="CC.toggleAuto()">
+          <button id="autorunBtn" class="iconbtn" title="자동실행 켜기/끄기" aria-label="자동실행 토글" onclick="CC.toggleAuto()">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"></path></svg>
           </button>
+          <span class="sep"></span>
+          <button id="learn" class="iconbtn" title="학습 도움말 · 예제" aria-label="학습 도움말" onclick="CC.openLearn()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"></path><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"></path></svg>
+          </button>
           <button id="theme" class="iconbtn" title="라이트/다크 전환" aria-label="테마 전환" onclick="CC.toggleTheme()">
-            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="4"></circle>
               <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
             </svg>
           </button>
+          <span class="sep"></span>
           <button id="save" class="iconbtn" title="다운로드" aria-label="다운로드" onclick="CC.openDownload()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v10"></path><path d="M7 12l5 5 5-5"></path><rect x="3" y="17" width="18" height="4" rx="1"></rect></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"></path><path d="M7 12l5 5 5-5"></path><path d="M5 21h14"></path></svg>
           </button>
           <input id="loadInput" type="file" accept=".json,.txt,.html,.htm,.css,.js" class="hidden" />
           <button id="load" class="iconbtn" title="불러오기 / 파일 열기" aria-label="불러오기" onclick="document.getElementById('loadInput').click()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path><path d="M3 12h18"></path></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path></svg>
           </button>
-          <button id="reset" class="iconbtn" title="초기화" aria-label="초기화" onclick="CC.reset()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>
+          <button id="reset" class="iconbtn" title="기본 코드로 초기화" aria-label="초기화" onclick="CC.reset()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>
           </button>
         </div>
       </div>
 
       <div class="tabs">
-        <button class="tab active" type="button" data-for="html" onclick="CC.switchTab('html')">HTML</button>
-        <button class="tab" type="button" data-for="css" onclick="CC.switchTab('css')">CSS</button>
-        <button class="tab" type="button" data-for="js" onclick="CC.switchTab('js')">JS</button>
+        <div class="tabgroup" role="tablist">
+          <button class="tab active" type="button" data-for="html" onclick="CC.switchTab('html')"><span class="tdot"></span>HTML</button>
+          <button class="tab" type="button" data-for="css" onclick="CC.switchTab('css')"><span class="tdot"></span>CSS</button>
+          <button class="tab" type="button" data-for="js" onclick="CC.switchTab('js')"><span class="tdot"></span>JS</button>
+        </div>
+        <button class="minibtn" id="copyBtn" title="현재 탭 코드 복사" onclick="CC.copyCurrent()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg>
+          복사
+        </button>
       </div>
 
       <div class="editors">
         <div class="editor-wrap" id="wrap-html">
           <div class="line-numbers" id="htmlLines"></div>
-          <textarea id="html" class="editor" spellcheck="false"><h1>안녕하세요!</h1>
-<p>왼쪽에서 코드를 입력하고, <strong>실행</strong> 버튼을 눌러보세요.</p>
+          <textarea id="html" class="editor" spellcheck="false" wrap="off" aria-label="HTML 코드"><h1>안녕하세요! 👋</h1>
+<p>왼쪽에서 코드를 입력하면 오른쪽에 결과가 바로 보여요.</p>
+<p>아래 <strong>버튼</strong>을 눌러보세요.</p>
 <button onclick="showAlert()">클릭해보세요</button></textarea>
         </div>
 
         <div class="editor-wrap hidden" id="wrap-css">
           <div class="line-numbers" id="cssLines"></div>
-          <textarea id="css" class="editor" spellcheck="false">body{
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR', Arial, sans-serif;
-  padding: 20px;
-  background: #eaf3ff;
+          <textarea id="css" class="editor" spellcheck="false" wrap="off" aria-label="CSS 코드">body{
+  font-family: system-ui, 'Noto Sans KR', sans-serif;
+  padding: 24px;
+  background: #eef2ff;
   text-align: center;
+  color: #1e293b;
 }
-h1{ color:#1e40af }
+h1{ color:#4f46e5 }
 button{
-  background:#2563eb; color:white; border:0; padding:10px 18px; border-radius:10px;
+  background:#6366f1; color:#fff; border:0;
+  padding:10px 20px; border-radius:10px; cursor:pointer;
+  font-size:15px;
 }
-button:hover{ filter:brightness(.95) }</textarea>
+button:hover{ background:#4f46e5 }</textarea>
         </div>
 
         <div class="editor-wrap hidden" id="wrap-js">
           <div class="line-numbers" id="jsLines"></div>
-          <textarea id="js" class="editor" spellcheck="false">function showAlert(){
+          <textarea id="js" class="editor" spellcheck="false" wrap="off" aria-label="JavaScript 코드">function showAlert(){
   const box = document.createElement('div');
   box.textContent = '버튼이 클릭되었습니다! ' + new Date().toLocaleTimeString();
-  box.style.cssText = 'margin-top:20px;padding:12px;border:1px solid #93c5fd;background:#dbeafe;border-radius:10px;color:#1e40af';
+  box.style.cssText = 'margin-top:20px;padding:12px;border:1px solid #c7d2fe;background:#e0e7ff;border-radius:10px;color:#4338ca';
   document.body.appendChild(box);
+  console.log('버튼 클릭됨');
 }
-console.log('콘솔 테스트: 정상 동작');</textarea>
+console.log('콘솔이 정상 동작합니다 ✔');</textarea>
         </div>
+      </div>
+
+      <div class="statusbar">
+        <span class="pill" id="stLang">HTML</span>
+        <span class="s-sep">·</span>
+        <span id="stPos">Ln 1, Col 1</span>
+        <span class="s-sep">·</span>
+        <span id="stLines">3줄</span>
+        <span class="s-sep">·</span>
+        <span id="stChars">0자</span>
       </div>
     </section>
 
-    <!-- SPLITTER -->
-    <div id="splitter" class="splitter" title="드래그하여 폭 조절"></div>
+    <!-- ================= SPLITTER ================= -->
+    <div id="splitter" class="splitter" title="드래그하여 폭 조절 · 더블클릭 시 균등"></div>
 
-    <!-- RIGHT -->
+    <!-- ================= RIGHT : 미리보기 + 콘솔 ================= -->
     <section class="right">
       <div class="previewbar">
-        <button id="desktop" class="iconbtn active" title="데스크톱" aria-label="데스크톱" onclick="CC.setDesktop()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"></rect><path d="M8 20h8"></path></svg>
-        </button>
-        <button id="mobile" class="iconbtn" title="모바일(375px)" aria-label="모바일" onclick="CC.setMobile()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"></rect><circle cx="12" cy="18" r="1"></circle></svg>
-        </button>
+        <span class="pv-label">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path></svg>
+          미리보기
+        </span>
+        <div class="pv-actions">
+          <button id="refresh" class="iconbtn" title="새로고침" aria-label="새로고침" onclick="CC.refreshPreview()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>
+          </button>
+          <button id="openNew" class="iconbtn" title="새 탭에서 열기" aria-label="새 탭에서 열기" onclick="CC.openInNew()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"></path><path d="M20 4l-8 8"></path><path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5"></path></svg>
+          </button>
+          <span class="sep"></span>
+          <button id="desktop" class="iconbtn active" title="데스크톱 보기" aria-label="데스크톱" onclick="CC.setDesktop()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"></rect><path d="M8 20h8"></path></svg>
+          </button>
+          <button id="mobile" class="iconbtn" title="모바일 보기 (375px)" aria-label="모바일" onclick="CC.setMobile()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"></rect><path d="M11 18h2"></path></svg>
+          </button>
+          <span class="sep"></span>
+          <button id="consoleToggle" class="iconbtn" title="콘솔 켜기/끄기" aria-label="콘솔 토글" onclick="CC.toggleConsole()">
+            <span class="dot"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 9l3 3-3 3"></path><path d="M13 15h4"></path></svg>
+          </button>
+        </div>
       </div>
-      <div class="preview">
+
+      <div class="preview" id="previewBox">
         <iframe id="view" title="미리보기"></iframe>
+      </div>
+
+      <div class="console hidden" id="consoleEl">
+        <div class="console-head">
+          <span class="console-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4-4 4"></path><path d="M12 16h6"></path></svg>
+            콘솔
+            <span class="badge" id="consoleBadge">0</span>
+          </span>
+          <div class="console-actions">
+            <button class="minibtn" onclick="CC.clearConsole()" title="콘솔 지우기">지우기</button>
+            <button class="minibtn" onclick="CC.toggleConsole()" title="콘솔 닫기" aria-label="콘솔 닫기">✕</button>
+          </div>
+        </div>
+        <div class="console-body" id="consoleBody"></div>
       </div>
     </section>
   </main>
@@ -292,22 +506,147 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
     </div>
   </footer>
 
-  <dialog id="dlDialog">
-    <header>다운로드</header>
+  <!-- ================= 다운로드 다이얼로그 ================= -->
+  <dialog id="dlDialog" aria-labelledby="dlTitle">
+    <header><span id="dlTitle">다운로드</span><button class="x" onclick="CC.closeDownload()" aria-label="닫기">×</button></header>
     <div class="body">
-      <div class="radio-row"><input type="radio" name="fmt" id="fmt_json" value="json" checked><label for="fmt_json">JSON (프로젝트 전체 저장)</label></div>
-      <div class="radio-row"><input type="radio" name="fmt" id="fmt_txt" value="txt"><label for="fmt_txt">TXT (구분자 포함한 텍스트)</label></div>
-      <div class="radio-row"><input type="radio" name="fmt" id="fmt_html" value="html"><label for="fmt_html">HTML (실행 가능한 단일 파일)</label></div>
-      <div class="help">확인을 누르면 선택한 형식으로 파일을 저장합니다.</div>
+      <label class="radio-row"><input type="radio" name="fmt" id="fmt_json" value="json" checked><span><span class="rt">JSON</span><span class="rd">프로젝트 전체 저장 · 다시 불러오기 좋음</span></span></label>
+      <label class="radio-row"><input type="radio" name="fmt" id="fmt_html" value="html"><span><span class="rt">HTML</span><span class="rd">바로 실행 가능한 단일 파일</span></span></label>
+      <label class="radio-row"><input type="radio" name="fmt" id="fmt_txt" value="txt"><span><span class="rt">TXT</span><span class="rd">구분자를 포함한 텍스트</span></span></label>
     </div>
     <div class="actions">
-      <button class="iconbtn" onclick="CC.closeDownload()">취소</button>
-      <button class="iconbtn active" onclick="CC.confirmDownload()">확인</button>
+      <button class="btn" onclick="CC.closeDownload()">취소</button>
+      <button class="btn primary" onclick="CC.confirmDownload()">다운로드</button>
     </div>
   </dialog>
 
+  <!-- ================= 학습 다이얼로그 ================= -->
+  <dialog id="learnDialog" aria-labelledby="learnTitle">
+    <header><span id="learnTitle">학습 도움말</span><button class="x" onclick="CC.closeLearn()" aria-label="닫기">×</button></header>
+    <div class="ltabs" role="tablist">
+      <button class="ltab active" data-l="html" onclick="CC.learnTab('html')">HTML</button>
+      <button class="ltab" data-l="css" onclick="CC.learnTab('css')">CSS</button>
+      <button class="ltab" data-l="js" onclick="CC.learnTab('js')">JavaScript</button>
+      <button class="ltab" data-l="ex" onclick="CC.learnTab('ex')">예제</button>
+      <button class="ltab" data-l="keys" onclick="CC.learnTab('keys')">단축키</button>
+    </div>
+    <div class="lbody">
+      <!-- HTML -->
+      <div class="lpane" data-l="html">
+        <h3>HTML — 구조 만들기</h3>
+        <p>HTML은 웹페이지의 <b>뼈대(구조)</b>를 만드는 언어예요. 태그로 제목·문단·이미지·버튼 등을 표현합니다.</p>
+        <h4>기본 구조</h4>
+        <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt; ... 문서 설정 ... &lt;/head&gt;
+  &lt;body&gt; ... 화면에 보이는 내용 ... &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        <p class="tip">코딩 캔버스에서는 <code>&lt;body&gt;</code> 안의 내용만 HTML 탭에 적으면 돼요. 머리말/스타일/스크립트는 자동으로 합쳐집니다.</p>
+        <h4>자주 쓰는 태그</h4>
+        <table class="ref">
+          <tr><td><code>&lt;h1&gt;~&lt;h6&gt;</code></td><td>제목 (숫자가 작을수록 큼)</td></tr>
+          <tr><td><code>&lt;p&gt;</code></td><td>문단(텍스트)</td></tr>
+          <tr><td><code>&lt;a href="..."&gt;</code></td><td>다른 페이지로 가는 링크</td></tr>
+          <tr><td><code>&lt;img src="..." alt="..."&gt;</code></td><td>이미지 (alt은 설명)</td></tr>
+          <tr><td><code>&lt;ul&gt; &lt;ol&gt; &lt;li&gt;</code></td><td>목록 (순서 없음/있음)</td></tr>
+          <tr><td><code>&lt;button&gt;</code></td><td>클릭 버튼</td></tr>
+          <tr><td><code>&lt;input&gt;</code></td><td>입력창</td></tr>
+          <tr><td><code>&lt;div&gt; &lt;span&gt;</code></td><td>내용을 묶는 영역/구간</td></tr>
+        </table>
+        <p class="tip">속성은 태그에 정보를 더해요. 예) <code>&lt;a href="주소"&gt;</code>, <code>&lt;img src="그림" alt="설명"&gt;</code></p>
+      </div>
+
+      <!-- CSS -->
+      <div class="lpane hidden" data-l="css">
+        <h3>CSS — 꾸미기</h3>
+        <p>CSS는 HTML을 <b>꾸미는(디자인)</b> 언어예요. 색·글꼴·여백·배치를 정합니다.</p>
+        <h4>작성 방법</h4>
+        <pre><code>선택자 {
+  속성: 값;
+}
+
+/* 예시 */
+p { color: blue; font-size: 16px; }</code></pre>
+        <h4>선택자</h4>
+        <table class="ref">
+          <tr><td><code>p</code></td><td>모든 &lt;p&gt; 태그</td></tr>
+          <tr><td><code>.box</code></td><td><code>class="box"</code> 인 요소</td></tr>
+          <tr><td><code>#title</code></td><td><code>id="title"</code> 인 요소</td></tr>
+        </table>
+        <h4>자주 쓰는 속성</h4>
+        <table class="ref">
+          <tr><td><code>color / background</code></td><td>글자색 / 배경색</td></tr>
+          <tr><td><code>font-size</code></td><td>글자 크기</td></tr>
+          <tr><td><code>padding / margin</code></td><td>안쪽 / 바깥쪽 여백</td></tr>
+          <tr><td><code>border / border-radius</code></td><td>테두리 / 모서리 둥글기</td></tr>
+          <tr><td><code>display: flex</code></td><td>가로 정렬(Flexbox)</td></tr>
+        </table>
+        <p class="tip">박스 모델: <b>내용</b>(content) → <b>안쪽 여백</b>(padding) → <b>테두리</b>(border) → <b>바깥 여백</b>(margin) 순서로 감싸져요.</p>
+      </div>
+
+      <!-- JS -->
+      <div class="lpane hidden" data-l="js">
+        <h3>JavaScript — 움직이게 하기</h3>
+        <p>JS는 웹페이지를 <b>움직이게(상호작용)</b> 만드는 언어예요. 클릭·입력 등에 반응합니다.</p>
+        <h4>변수와 자료형</h4>
+        <pre><code>let name = "홍길동";   // 문자열
+const age = 20;        // 숫자
+let isOn = true;       // 참/거짓 (boolean)
+let list = [1, 2, 3];  // 배열</code></pre>
+        <h4>함수</h4>
+        <pre><code>function hello(){
+  console.log("안녕!");
+}
+hello();</code></pre>
+        <h4>화면 다루기 (DOM)</h4>
+        <pre><code>const el = document.querySelector("#box");
+el.textContent = "바뀐 내용";
+el.style.color = "red";</code></pre>
+        <h4>이벤트 (클릭 등에 반응)</h4>
+        <pre><code>button.addEventListener("click", () =&gt; {
+  alert("클릭됨!");
+});</code></pre>
+        <p class="tip"><code>console.log(...)</code>의 결과는 오른쪽 아래 <b>콘솔</b> 패널에서 볼 수 있어요. 오류도 콘솔에 빨간색으로 표시됩니다.</p>
+      </div>
+
+      <!-- 예제 -->
+      <div class="lpane hidden" data-l="ex">
+        <h3>예제로 시작하기</h3>
+        <p>마음에 드는 예제를 불러와 코드를 바꿔보며 배워보세요.</p>
+        <div class="examples" id="examplesGrid"></div>
+      </div>
+
+      <!-- 단축키 -->
+      <div class="lpane hidden" data-l="keys">
+        <h3>단축키 & 사용법</h3>
+        <table class="ref">
+          <tr><td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd></td><td>코드 실행</td></tr>
+          <tr><td><kbd>Tab</kbd></td><td>들여쓰기 (공백 2칸)</td></tr>
+          <tr><td>가운데 구분선 드래그</td><td>좌우 패널 너비 조절</td></tr>
+          <tr><td>구분선 더블클릭</td><td>좌우 너비를 균등하게</td></tr>
+        </table>
+        <h4>아이콘 안내</h4>
+        <ul class="iconhelp">
+          <li><b>▶ 실행</b> · 코드를 미리보기에 반영</li>
+          <li><b>⚡ 자동실행</b> · 입력할 때마다 자동 반영 (켜짐/꺼짐 토글)</li>
+          <li><b>🎓 학습</b> · 이 도움말과 예제 열기</li>
+          <li><b>☀ 테마</b> · 라이트/다크 화면 전환</li>
+          <li><b>⤓ 다운로드 / 📂 불러오기</b> · 프로젝트 저장 및 열기</li>
+          <li><b>↺ 초기화</b> · 기본 코드로 되돌리기</li>
+          <li><b>⌗ 콘솔</b> · console.log 출력과 오류 확인</li>
+        </ul>
+        <p class="tip">작성한 코드는 브라우저에 자동 저장돼요. 다음에 다시 와도 이어서 작업할 수 있어요.</p>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" onclick="CC.closeLearn()">닫기</button>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
 <script>
-  /* ===== 실제 뷰포트 높이를 CSS 변수로 반영(모바일 100vh 버그 해결) ===== */
+  /* ===== 실제 뷰포트 높이를 CSS 변수로 반영 (모바일 100vh 버그 해결) ===== */
   (function(){
     const setVH = ()=>{
       const h = (window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight;
@@ -319,51 +658,80 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
   })();
 
   const CC = (function(){
+    const $ = (id)=>document.getElementById(id);
     const el = {
-      html: document.getElementById('html'),
-      css: document.getElementById('css'),
-      js: document.getElementById('js'),
-      htmlLines: document.getElementById('htmlLines'),
-      cssLines: document.getElementById('cssLines'),
-      jsLines: document.getElementById('jsLines'),
-      view: document.getElementById('view'),
-      autorunBtn: document.getElementById('autorunBtn'),
-      themeIcon: document.getElementById('themeIcon'),
-      desktop: document.getElementById('desktop'),
-      mobile: document.getElementById('mobile'),
-      dlDialog: document.getElementById('dlDialog'),
-      loadInput: document.getElementById('loadInput'),
-      splitter: document.getElementById('splitter'),
+      html: $('html'), css: $('css'), js: $('js'),
+      htmlLines: $('htmlLines'), cssLines: $('cssLines'), jsLines: $('jsLines'),
+      view: $('view'), previewBox: $('previewBox'),
+      runBtn: $('run'), autorunBtn: $('autorunBtn'), themeIcon: $('themeIcon'),
+      desktop: $('desktop'), mobile: $('mobile'),
+      dlDialog: $('dlDialog'), learnDialog: $('learnDialog'),
+      loadInput: $('loadInput'), splitter: $('splitter'), copyBtn: $('copyBtn'),
+      consoleEl: $('consoleEl'), consoleBody: $('consoleBody'), consoleBadge: $('consoleBadge'), consoleToggle: $('consoleToggle'),
+      examplesGrid: $('examplesGrid'), toast: $('toast'),
+      stLang: $('stLang'), stPos: $('stPos'), stLines: $('stLines'), stChars: $('stChars'),
       root: document.documentElement
     };
 
+    const KEY = { html:'cc_v7_html', css:'cc_v7_css', js:'cc_v7_js', theme:'cc_v7_theme', split:'cc_v7_split', auto:'cc_v7_auto', tab:'cc_v7_tab', con:'cc_v7_console' };
+
     let autoOn = true;
-    function setAuto(on){ autoOn = !!on; el.autorunBtn.classList.toggle('active', autoOn); }
+    let activeTab = 'html';
+    let consoleVisible = false, consoleCount = 0, consoleErrors = 0;
 
-    function switchTab(which){
-      document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.for===which));
-      document.querySelectorAll('.editor-wrap').forEach(w => w.classList.toggle('hidden', w.id !== 'wrap-' + which));
-      updateLineNumbers(which);
+    /* iframe 안에서 실행되어 console / 오류를 부모로 전달하는 브릿지 스크립트 */
+    const CONSOLE_BRIDGE = `
+(function(){
+  var TYPE='__cc_console__';
+  function safe(v, seen){
+    seen = seen || [];
+    if(v===null) return 'null';
+    if(v===undefined) return 'undefined';
+    var t = typeof v;
+    if(t==='string') return v;
+    if(t==='number'||t==='boolean'||t==='bigint') return String(v);
+    if(t==='function') return 'ƒ ' + (v.name||'anonymous') + '()';
+    if(t==='symbol') return v.toString();
+    if(v instanceof Error) return (v.name||'Error') + ': ' + v.message;
+    if(t==='object'){
+      if(seen.indexOf(v)>=0) return '[순환참조]';
+      seen.push(v);
+      try{
+        if(v.nodeType) return '<' + String(v.nodeName||'node').toLowerCase() + (v.id? '#'+v.id : '') + '>';
+        if(Array.isArray(v)) return '[' + v.map(function(x){ return safe(x, seen); }).join(', ') + ']';
+        var parts = [];
+        for(var k in v){ if(Object.prototype.hasOwnProperty.call(v,k)) parts.push(k + ': ' + safe(v[k], seen)); }
+        return '{' + parts.join(', ') + '}';
+      }catch(e){ return String(v); }
+      finally{ seen.pop(); }
     }
+    return String(v);
+  }
+  function send(level, args){
+    var parts = [];
+    for(var i=0;i<args.length;i++) parts.push(safe(args[i]));
+    try{ parent.postMessage({ __cc:TYPE, level:level, text:parts.join(' ') }, '*'); }catch(e){}
+  }
+  ['log','info','warn','error','debug'].forEach(function(m){
+    var orig = console[m];
+    console[m] = function(){ send(m, arguments); if(orig){ try{ orig.apply(console, arguments); }catch(e){} } };
+  });
+  window.addEventListener('error', function(e){
+    send('error', [(e.error && e.error.message) ? (e.error.name + ': ' + e.error.message) : (e.message || '오류가 발생했습니다')]);
+  });
+  window.addEventListener('unhandledrejection', function(e){
+    send('error', ['처리되지 않은 Promise 거부: ' + safe(e.reason)]);
+  });
+})();`;
 
-    /* ===== Line Numbers ===== */
-    function updateLineNumbers(which){
-      const ed = el[which];
-      const ln = el[which + 'Lines'];
-      if(!ed || !ln) return;
-      const count = ed.value.split('\n').length;
-      let nums = '';
-      for(let i = 1; i <= count; i++) nums += i + '\n';
-      ln.textContent = nums;
-    }
-    function updateAllLineNumbers(){
-      ['html','css','js'].forEach(updateLineNumbers);
-    }
-
-    function buildDoc(){
+    /* ===================== 미리보기 문서 생성 ===================== */
+    function buildDoc(withBridge){
+      const bridge = withBridge ? `<script>${CONSOLE_BRIDGE}<\/script>` : '';
       return `<!doctype html>
-<html><head><meta charset="utf-8"><style>${el.css.value}</style></head>
-<body>${el.html.value}<script>${el.js.value}<\/script></body></html>`;
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${bridge}
+<style>${el.css.value}</style></head>
+<body>${el.html.value}
+<script>${el.js.value}<\/script></body></html>`;
     }
 
     function setPreviewContent(docStr){
@@ -379,24 +747,118 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
       }
     }
 
-    function render(){ setPreviewContent(buildDoc()); }
-    function toggleAuto(){ setAuto(!autoOn); }
+    function render(){ clearConsole(); setPreviewContent(buildDoc(true)); }
+    function run(){ render(); flashRun(); }
+    function refreshPreview(){ run(); }
+    function flashRun(){ el.runBtn.classList.add('flash'); setTimeout(()=>el.runBtn.classList.remove('flash'), 400); }
 
+    function openInNew(){
+      const blob = new Blob([buildDoc(false)], {type:'text/html'});
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    }
+
+    /* ===================== 자동실행 ===================== */
+    function setAuto(on){ autoOn = !!on; el.autorunBtn.classList.toggle('active', autoOn); el.autorunBtn.title = autoOn? '자동실행 켜짐 (끄려면 클릭)' : '자동실행 꺼짐 (켜려면 클릭)'; localStorage.setItem(KEY.auto, autoOn?'1':'0'); }
+    function toggleAuto(){ setAuto(!autoOn); showToast(autoOn? '자동실행 켜짐' : '자동실행 꺼짐'); if(autoOn) render(); }
+
+    /* ===================== 탭 ===================== */
+    function switchTab(which){
+      activeTab = which;
+      document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.for===which));
+      document.querySelectorAll('.editor-wrap').forEach(w => w.classList.toggle('hidden', w.id !== 'wrap-' + which));
+      localStorage.setItem(KEY.tab, which);
+      updateLineNumbers(which);
+      el[which].focus();
+      updateStatus();
+    }
+
+    /* ===================== 줄 번호 ===================== */
+    function updateLineNumbers(which){
+      const ed = el[which], ln = el[which + 'Lines'];
+      if(!ed || !ln) return;
+      const count = ed.value.split('\n').length;
+      let nums = '';
+      for(let i=1;i<=count;i++) nums += i + '\n';
+      ln.textContent = nums;
+      ln.scrollTop = ed.scrollTop;
+    }
+    function updateAllLineNumbers(){ ['html','css','js'].forEach(updateLineNumbers); }
+
+    /* ===================== 상태바 ===================== */
+    function updateStatus(){
+      const ed = el[activeTab];
+      const pos = ed.selectionStart || 0;
+      const before = ed.value.slice(0, pos);
+      const line = before.split('\n').length;
+      const col = pos - before.lastIndexOf('\n');
+      const lines = ed.value.split('\n').length;
+      el.stLang.textContent = activeTab.toUpperCase();
+      el.stPos.textContent = 'Ln ' + line + ', Col ' + col;
+      el.stLines.textContent = lines + '줄';
+      el.stChars.textContent = ed.value.length + '자';
+    }
+
+    /* ===================== 콘솔 ===================== */
+    function setConsole(on){
+      consoleVisible = !!on;
+      el.consoleEl.classList.toggle('hidden', !consoleVisible);
+      el.consoleToggle.classList.toggle('active', consoleVisible);
+      localStorage.setItem(KEY.con, consoleVisible?'1':'0');
+      if(consoleVisible) el.consoleToggle.classList.remove('has-error');
+    }
+    function toggleConsole(){ setConsole(!consoleVisible); }
+    function updateBadge(){
+      el.consoleBadge.textContent = consoleCount;
+      el.consoleBadge.style.display = consoleCount ? 'inline-flex' : 'none';
+      el.consoleBadge.classList.toggle('err', consoleErrors>0);
+    }
+    function clearConsole(){
+      el.consoleBody.innerHTML = '';
+      consoleCount = 0; consoleErrors = 0;
+      updateBadge();
+      el.consoleToggle.classList.remove('has-error');
+      showConsoleEmpty();
+    }
+    function showConsoleEmpty(){
+      const d = document.createElement('div');
+      d.className = 'console-empty';
+      d.textContent = 'console.log(...) 의 출력과 오류가 여기에 표시됩니다.';
+      el.consoleBody.appendChild(d);
+    }
+    function addConsoleLine(level, text){
+      const empty = el.consoleBody.querySelector('.console-empty');
+      if(empty) empty.remove();
+      consoleCount++;
+      if(level==='error') consoleErrors++;
+      const line = document.createElement('div');
+      line.className = 'cline ' + level;
+      line.textContent = text;
+      el.consoleBody.appendChild(line);
+      el.consoleBody.scrollTop = el.consoleBody.scrollHeight;
+      updateBadge();
+      if(!consoleVisible && level==='error') el.consoleToggle.classList.add('has-error');
+    }
+
+    /* ===================== 테마 ===================== */
     function setThemeIcon(dark){
       el.themeIcon.innerHTML = dark
-        ? '<path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"></path>'
+        ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>'
         : '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>';
     }
     function toggleTheme(){
       const dark = !document.documentElement.classList.contains('dark');
       document.documentElement.classList.toggle('dark', dark);
-      localStorage.setItem('cc_v7_theme', dark ? 'dark':'light');
+      localStorage.setItem(KEY.theme, dark ? 'dark':'light');
       setThemeIcon(dark);
     }
 
-    function setDesktop(){ el.desktop.classList.add('active'); el.mobile.classList.remove('active'); el.view.classList.remove('w375'); }
-    function setMobile(){ el.mobile.classList.add('active'); el.desktop.classList.remove('active'); el.view.classList.add('w375'); }
+    /* ===================== 미리보기 폭 ===================== */
+    function setDesktop(){ el.desktop.classList.add('active'); el.mobile.classList.remove('active'); el.previewBox.classList.remove('is-mobile'); }
+    function setMobile(){ el.mobile.classList.add('active'); el.desktop.classList.remove('active'); el.previewBox.classList.add('is-mobile'); }
 
+    /* ===================== 다운로드 ===================== */
     function openDownload(){ if (typeof el.dlDialog.showModal === 'function') el.dlDialog.showModal(); else el.dlDialog.setAttribute('open','open'); }
     function closeDownload(){ if (typeof el.dlDialog.close === 'function') el.dlDialog.close(); else el.dlDialog.removeAttribute('open'); }
     function confirmDownload(){
@@ -404,123 +866,339 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
       const download = (filename, text, type)=>{ const blob=new Blob([text],{type}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000); };
       if(fmt==='json'){ download('coding-canvas.json', JSON.stringify({html:el.html.value, css:el.css.value, js:el.js.value}, null, 2), 'application/json'); }
       else if(fmt==='txt'){ download('coding-canvas.txt', ['===HTML===',el.html.value.trim(),'===CSS===',el.css.value.trim(),'===JS===',el.js.value.trim()].join('\n'), 'text/plain'); }
-      else { download('coding-canvas.html', buildDoc(), 'text/html'); }
+      else { download('coding-canvas.html', buildDoc(false), 'text/html'); }
       closeDownload();
+      showToast(fmt.toUpperCase() + ' 파일을 저장했어요');
     }
 
+    /* ===================== 복사 ===================== */
+    function copyCurrent(){
+      const text = el[activeTab].value;
+      const done = ()=> showToast(activeTab.toUpperCase() + ' 코드를 복사했어요');
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text, done));
+      } else fallbackCopy(text, done);
+    }
+    function fallbackCopy(text, done){
+      const ta = document.createElement('textarea'); ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); done(); }catch(e){ showToast('복사에 실패했어요'); }
+      ta.remove();
+    }
+
+    /* ===================== 초기화 ===================== */
     function reset(){
-      if(!confirm('초기 상태로 되돌릴까요?')) return;
+      if(!confirm('현재 코드를 기본 예제로 되돌릴까요?\n(저장하지 않은 내용은 사라집니다)')) return;
       el.html.value=DEFAULTS.html; el.css.value=DEFAULTS.css; el.js.value=DEFAULTS.js;
-      updateAllLineNumbers();
-      render();
+      persist(); updateAllLineNumbers(); render(); updateStatus();
+      showToast('기본 코드로 되돌렸어요');
     }
     function hardReset(){
-      ['cc_v7_html','cc_v7_css','cc_v7_js','cc_v7_theme','cc_v7_split'].forEach(k=>localStorage.removeItem(k));
+      if(!confirm('처음 화면으로 되돌릴까요?\n작성한 코드, 테마, 레이아웃 등 저장된 모든 내용이 삭제됩니다.')) return;
+      Object.values(KEY).forEach(k=>localStorage.removeItem(k));
       el.html.value=DEFAULTS.html; el.css.value=DEFAULTS.css; el.js.value=DEFAULTS.js;
       document.documentElement.classList.remove('dark'); setThemeIcon(false);
       setDesktop(); setAuto(true); el.root.style.setProperty('--left-col','1fr');
-      updateAllLineNumbers();
-      render();
+      switchTab('html'); updateAllLineNumbers(); render(); updateStatus();
+      showToast('처음 상태로 되돌렸어요');
     }
 
-    /* ===== Splitter with overlay (iframe-safe) ===== */
+    /* ===================== 예제 ===================== */
+    const EXAMPLES = [
+      { id:'hello', title:'기본 인사', desc:'HTML·CSS·JS가 함께 동작하는 가장 기본적인 예제' },
+      { id:'card', title:'프로필 카드', desc:'Flexbox와 그림자로 만드는 카드 UI',
+        html:`<div class="card">
+  <img class="avatar" src="https://i.pravatar.cc/160" alt="프로필 사진">
+  <h2>김코딩</h2>
+  <p class="role">웹 개발자</p>
+  <p class="bio">HTML·CSS·JS로 멋진 웹을 만듭니다.</p>
+  <button onclick="follow(this)">팔로우</button>
+</div>`,
+        css:`body{
+  margin:0; min-height:100vh;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,#e0e7ff,#f1f5f9);
+  font-family:system-ui,'Noto Sans KR',sans-serif;
+}
+.card{
+  background:#fff; width:260px; padding:28px; text-align:center;
+  border-radius:20px; box-shadow:0 20px 40px rgba(79,70,229,.15);
+}
+.avatar{ width:96px; height:96px; border-radius:50%; object-fit:cover; }
+h2{ margin:14px 0 2px; }
+.role{ color:#4f46e5; font-weight:600; margin:0; }
+.bio{ color:#64748b; font-size:14px; }
+button{
+  margin-top:10px; background:#6366f1; color:#fff; border:0;
+  padding:10px 22px; border-radius:999px; cursor:pointer; font-size:14px;
+}
+button:hover{ background:#4f46e5; }`,
+        js:`function follow(btn){
+  if(btn.textContent === '팔로우'){
+    btn.textContent = '팔로잉 ✓';
+    btn.style.background = '#16a34a';
+    console.log('팔로우 했습니다!');
+  } else {
+    btn.textContent = '팔로우';
+    btn.style.background = '#6366f1';
+    console.log('팔로우를 취소했습니다.');
+  }
+}` },
+      { id:'counter', title:'클릭 카운터', desc:'버튼 이벤트로 숫자를 늘리고 줄이기',
+        html:`<div class="counter">
+  <p class="label">클릭 카운터</p>
+  <div class="num" id="num">0</div>
+  <div class="btns">
+    <button onclick="step(-1)">－</button>
+    <button class="reset" onclick="reset()">초기화</button>
+    <button onclick="step(1)">＋</button>
+  </div>
+</div>`,
+        css:`body{
+  margin:0; min-height:100vh;
+  display:flex; align-items:center; justify-content:center;
+  background:#0f172a; color:#e2e8f0;
+  font-family:system-ui,'Noto Sans KR',sans-serif;
+}
+.counter{ text-align:center; }
+.label{ color:#94a3b8; letter-spacing:.1em; }
+.num{ font-size:84px; font-weight:800; margin:10px 0 24px; color:#818cf8; }
+.btns{ display:flex; gap:10px; justify-content:center; }
+button{
+  background:#1e293b; color:#e2e8f0; border:1px solid #334155;
+  font-size:20px; width:60px; height:60px; border-radius:14px; cursor:pointer;
+}
+button:hover{ background:#334155; }
+.reset{ width:auto; padding:0 18px; font-size:15px; }`,
+        js:`let count = 0;
+const num = document.getElementById('num');
+function draw(){ num.textContent = count; }
+function step(n){ count += n; draw(); console.log('현재 값:', count); }
+function reset(){ count = 0; draw(); console.log('초기화 되었습니다.'); }
+draw();` },
+      { id:'todo', title:'할 일 목록', desc:'입력·추가·삭제로 배우는 DOM 조작',
+        html:`<div class="todo">
+  <h1>오늘 할 일</h1>
+  <div class="row">
+    <input id="task" placeholder="할 일을 입력하고 Enter">
+    <button onclick="add()">추가</button>
+  </div>
+  <ul id="list"></ul>
+</div>`,
+        css:`body{
+  margin:0; padding:30px; background:#f8fafc; color:#0f172a;
+  font-family:system-ui,'Noto Sans KR',sans-serif;
+}
+.todo{ max-width:420px; margin:0 auto; }
+h1{ font-size:22px; }
+.row{ display:flex; gap:8px; }
+input{ flex:1; padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; }
+.row button{ background:#6366f1; color:#fff; border:0; padding:0 16px; border-radius:10px; cursor:pointer; }
+ul{ list-style:none; padding:0; margin:16px 0 0; }
+li{
+  display:flex; align-items:center; justify-content:space-between;
+  background:#fff; padding:12px 14px; border-radius:10px; margin-bottom:8px;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+li button{ background:#ef4444; color:#fff; border:0; padding:6px 10px; font-size:12px; border-radius:8px; cursor:pointer; }`,
+        js:`const list = document.getElementById('list');
+const input = document.getElementById('task');
+function add(){
+  const text = input.value.trim();
+  if(!text){ return; }
+  const li = document.createElement('li');
+  const span = document.createElement('span');
+  span.textContent = text;
+  const del = document.createElement('button');
+  del.textContent = '삭제';
+  del.onclick = function(){ li.remove(); console.log('삭제:', text); };
+  li.appendChild(span);
+  li.appendChild(del);
+  list.appendChild(li);
+  input.value = '';
+  console.log('추가:', text);
+}
+input.addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){ add(); }
+});` },
+      { id:'palette', title:'배경색 바꾸기', desc:'클릭으로 스타일을 바꾸는 이벤트 예제',
+        html:`<div class="box" id="box">
+  <h1>배경색을 바꿔보세요</h1>
+  <p id="code">#ffffff</p>
+  <button onclick="change()">랜덤 색 바꾸기</button>
+</div>`,
+        css:`html,body{ height:100%; margin:0; }
+.box{
+  height:100%; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:12px;
+  font-family:system-ui,'Noto Sans KR',sans-serif;
+  transition:background .3s; background:#ffffff;
+}
+#code{ font-family:monospace; font-size:20px; }
+button{
+  background:#111827; color:#fff; border:0; padding:12px 22px;
+  border-radius:12px; cursor:pointer; font-size:15px;
+}`,
+        js:`const box = document.getElementById('box');
+const code = document.getElementById('code');
+function change(){
+  const hex = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6,'0');
+  box.style.background = hex;
+  code.textContent = hex;
+  console.log('새 배경색:', hex);
+}` },
+      { id:'gallery', title:'사진 갤러리', desc:'CSS Grid로 만드는 반응형 격자',
+        html:`<h1>사진 갤러리</h1>
+<div class="grid">
+  <div class="item" style="--c:#f472b6">1</div>
+  <div class="item" style="--c:#60a5fa">2</div>
+  <div class="item" style="--c:#34d399">3</div>
+  <div class="item" style="--c:#fbbf24">4</div>
+  <div class="item" style="--c:#a78bfa">5</div>
+  <div class="item" style="--c:#f87171">6</div>
+</div>`,
+        css:`body{
+  margin:0; padding:24px; background:#f8fafc; text-align:center;
+  font-family:system-ui,'Noto Sans KR',sans-serif;
+}
+.grid{
+  display:grid; gap:14px;
+  grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));
+}
+.item{
+  background:var(--c); aspect-ratio:1; border-radius:16px;
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:28px; font-weight:800;
+  transition:transform .2s; cursor:pointer;
+}
+.item:hover{ transform:translateY(-6px) scale(1.03); }`,
+        js:`document.querySelectorAll('.item').forEach(function(it){
+  it.addEventListener('click', function(){
+    console.log(it.textContent + '번 사진을 클릭했어요');
+  });
+});` }
+    ];
+
+    function renderExamples(){
+      el.examplesGrid.innerHTML = '';
+      EXAMPLES.forEach(ex=>{
+        const card = document.createElement('div'); card.className = 'excard';
+        const t = document.createElement('div'); t.className = 'extitle'; t.textContent = ex.title;
+        const d = document.createElement('div'); d.className = 'exdesc'; d.textContent = ex.desc;
+        const b = document.createElement('button'); b.className = 'btn primary'; b.textContent = '불러오기';
+        b.onclick = ()=>loadExample(ex.id);
+        card.append(t, d, b);
+        el.examplesGrid.appendChild(card);
+      });
+    }
+    function loadExample(id){
+      const ex = (id==='hello') ? DEFAULTS : EXAMPLES.find(e=>e.id===id);
+      if(!ex) return;
+      if(!confirm('현재 코드를 이 예제로 바꿀까요?\n(저장하지 않은 내용은 사라집니다)')) return;
+      el.html.value = ex.html; el.css.value = ex.css; el.js.value = ex.js;
+      persist(); updateAllLineNumbers(); switchTab('html'); render(); updateStatus();
+      closeLearn();
+      showToast('예제를 불러왔어요');
+    }
+
+    /* ===================== 학습 다이얼로그 ===================== */
+    function openLearn(){ if (typeof el.learnDialog.showModal === 'function') el.learnDialog.showModal(); else el.learnDialog.setAttribute('open','open'); }
+    function closeLearn(){ if (typeof el.learnDialog.close === 'function') el.learnDialog.close(); else el.learnDialog.removeAttribute('open'); }
+    function learnTab(which){
+      document.querySelectorAll('.ltab').forEach(b=>b.classList.toggle('active', b.dataset.l===which));
+      document.querySelectorAll('.lpane').forEach(p=>p.classList.toggle('hidden', p.dataset.l!==which));
+      el.learnDialog.querySelector('.lbody').scrollTop = 0;
+    }
+
+    /* ===================== 토스트 ===================== */
+    let toastTimer;
+    function showToast(msg){
+      el.toast.textContent = msg; el.toast.classList.add('show');
+      clearTimeout(toastTimer); toastTimer = setTimeout(()=>el.toast.classList.remove('show'), 1800);
+    }
+
+    /* ===================== 저장 ===================== */
+    function persist(){
+      localStorage.setItem(KEY.html, el.html.value);
+      localStorage.setItem(KEY.css, el.css.value);
+      localStorage.setItem(KEY.js, el.js.value);
+    }
+
+    /* ===================== 스플리터 ===================== */
     function setupSplitter(){
       const s = el.splitter; if(!s) return;
-      const MIN = 240;
-
-      function getSplitW(){
-        const v = getComputedStyle(document.documentElement).getPropertyValue('--splitter-w');
-        const n = parseInt(v,10); return isNaN(n)?6:n;
-      }
-      function clamp(px){
-        const vw = Math.max(document.documentElement.clientWidth, window.innerWidth||0);
-        const max = vw - getSplitW() - 240;
-        return Math.max(MIN, Math.min(px, max));
-      }
-      function setLeft(px){ el.root.style.setProperty('--left-col', px+'px'); localStorage.setItem('cc_v7_split', String(px)); }
-
+      const MIN = 260;
+      function getSplitW(){ const v = getComputedStyle(document.documentElement).getPropertyValue('--splitter-w'); const n = parseInt(v,10); return isNaN(n)?8:n; }
+      function clamp(px){ const vw = Math.max(document.documentElement.clientWidth, window.innerWidth||0); const max = vw - getSplitW() - 260; return Math.max(MIN, Math.min(px, max)); }
+      function setLeft(px){ el.root.style.setProperty('--left-col', px+'px'); localStorage.setItem(KEY.split, String(px)); }
       let overlay=null;
-      function move(clientX){
-        const rect = document.body.getBoundingClientRect();
-        setLeft(clamp(clientX - rect.left));
-      }
-      function onMove(e){
-        const x = (e.touches? e.touches[0].clientX : e.clientX);
-        move(x);
-      }
-      function stop(){
-        s.classList.remove('dragging');
-        if(overlay){ overlay.removeEventListener('pointermove', onMove); overlay.removeEventListener('pointerup', stop); overlay.removeEventListener('pointercancel', stop); overlay.remove(); overlay=null; }
-      }
-      function start(e){
-        e.preventDefault();
-        s.classList.add('dragging');
-        overlay = document.createElement('div');
-        overlay.className = 'drag-overlay';
-        document.body.appendChild(overlay);
-        overlay.addEventListener('pointermove', onMove);
-        overlay.addEventListener('pointerup', stop);
-        overlay.addEventListener('pointercancel', stop);
-        onMove(e);
-      }
-
+      function move(clientX){ const rect = document.body.getBoundingClientRect(); setLeft(clamp(clientX - rect.left)); }
+      function onMove(e){ const x = (e.touches? e.touches[0].clientX : e.clientX); move(x); }
+      function stop(){ s.classList.remove('dragging'); if(overlay){ overlay.removeEventListener('pointermove', onMove); overlay.removeEventListener('pointerup', stop); overlay.removeEventListener('pointercancel', stop); overlay.remove(); overlay=null; } }
+      function start(e){ e.preventDefault(); s.classList.add('dragging'); overlay = document.createElement('div'); overlay.className = 'drag-overlay'; document.body.appendChild(overlay); overlay.addEventListener('pointermove', onMove); overlay.addEventListener('pointerup', stop); overlay.addEventListener('pointercancel', stop); onMove(e); }
       s.addEventListener('pointerdown', start);
-      s.addEventListener('dblclick', ()=>{
-        const vw = Math.max(document.documentElement.clientWidth, window.innerWidth||0);
-        setLeft(Math.round((vw - getSplitW())/2));
-      });
-
-      const saved = parseInt(localStorage.getItem('cc_v7_split')||'0',10); if(saved>0) setLeft(saved);
-      window.addEventListener('resize', ()=>{
-        const cur = parseInt(getComputedStyle(el.root).getPropertyValue('--left-col'),10);
-        if(!isNaN(cur)) setLeft(clamp(cur));
-      });
+      s.addEventListener('dblclick', ()=>{ const vw = Math.max(document.documentElement.clientWidth, window.innerWidth||0); setLeft(Math.round((vw - getSplitW())/2)); });
+      const saved = parseInt(localStorage.getItem(KEY.split)||'0',10); if(saved>0) setLeft(saved);
+      window.addEventListener('resize', ()=>{ const cur = parseInt(getComputedStyle(el.root).getPropertyValue('--left-col'),10); if(!isNaN(cur)) setLeft(clamp(cur)); });
     }
 
-    // typing debounce + tab indent + line numbers sync
+    /* ===================== 에디터 이벤트 ===================== */
     let t;
+    function scheduleRender(){ if(!autoOn) return; clearTimeout(t); t=setTimeout(render, 240); }
     [el.html, el.css, el.js].forEach(ed=>{
       const ln = el[ed.id + 'Lines'];
-
-      ed.addEventListener('input', ()=>{
-        localStorage.setItem('cc_v7_html', el.html.value);
-        localStorage.setItem('cc_v7_css',  el.css.value);
-        localStorage.setItem('cc_v7_js',   el.js.value);
-        updateLineNumbers(ed.id);
-        if(!autoOn) return; clearTimeout(t); t=setTimeout(render,240);
-      });
-
-      ed.addEventListener('scroll', ()=>{
-        if(ln) ln.scrollTop = ed.scrollTop;
-      });
-
+      ed.addEventListener('input', ()=>{ persist(); updateLineNumbers(ed.id); updateStatus(); scheduleRender(); });
+      ed.addEventListener('scroll', ()=>{ if(ln) ln.scrollTop = ed.scrollTop; });
+      ed.addEventListener('keyup', updateStatus);
+      ed.addEventListener('click', updateStatus);
       ed.addEventListener('keydown', (e)=>{
         if(e.key==='Tab'){
           e.preventDefault();
-          const s=ed.selectionStart, epos=ed.selectionEnd;
-          ed.value=ed.value.substring(0,s)+'  '+ed.value.substring(epos);
-          ed.selectionStart=ed.selectionEnd=s+2;
-          updateLineNumbers(ed.id);
-          if(autoOn){ clearTimeout(t); t=setTimeout(render,240); }
+          const sStart=ed.selectionStart, sEnd=ed.selectionEnd;
+          ed.value = ed.value.substring(0,sStart) + '  ' + ed.value.substring(sEnd);
+          ed.selectionStart = ed.selectionEnd = sStart+2;
+          persist(); updateLineNumbers(ed.id); updateStatus(); scheduleRender();
         }
       });
     });
 
+    /* ===================== 콘솔 메시지 수신 ===================== */
+    window.addEventListener('message', (e)=>{
+      if(e.source !== el.view.contentWindow) return;
+      const d = e.data;
+      if(!d || d.__cc !== '__cc_console__') return;
+      addConsoleLine(d.level, String(d.text==null? '' : d.text));
+    });
+
     const DEFAULTS = { html: el.html.value, css: el.css.value, js: el.js.value };
+
+    /* ===================== 초기화 ===================== */
     function init(){
-      const theme = localStorage.getItem('cc_v7_theme');
+      // 테마
+      const theme = localStorage.getItem(KEY.theme);
       const dark = theme==='dark' || (theme!=='light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
       document.documentElement.classList.toggle('dark', dark); setThemeIcon(dark);
 
-      const hs = localStorage.getItem('cc_v7_html'); if(hs!==null) el.html.value = hs;
-      const cs = localStorage.getItem('cc_v7_css');  if(cs!==null) el.css.value  = cs;
-      const jsS = localStorage.getItem('cc_v7_js');  if(jsS!==null) el.js.value  = jsS;
+      // 저장된 코드 복원
+      const hs = localStorage.getItem(KEY.html); if(hs!==null) el.html.value = hs;
+      const cs = localStorage.getItem(KEY.css);  if(cs!==null) el.css.value  = cs;
+      const jsS = localStorage.getItem(KEY.js);  if(jsS!==null) el.js.value  = jsS;
 
-      setAuto(true);
+      // 자동실행 / 활성 탭 / 콘솔 상태 복원
+      setAuto(localStorage.getItem(KEY.auto)==='0' ? false : true);
+      const savedTab = localStorage.getItem(KEY.tab); if(savedTab && ['html','css','js'].includes(savedTab)) activeTab = savedTab;
+      const conPref = localStorage.getItem(KEY.con);
+      setConsole(conPref!==null ? conPref==='1' : (window.innerWidth > 900));
+
+      renderExamples();
       setupSplitter();
+      switchTab(activeTab);
+      clearConsole();
       updateAllLineNumbers();
       render();
+      updateStatus();
 
+      // 파일 불러오기
       el.loadInput.addEventListener('change', (e)=>{
         const file = e.target.files && e.target.files[0]; if(!file) return;
         const ext = (file.name.split('.').pop()||'').toLowerCase();
@@ -533,25 +1211,29 @@ console.log('콘솔 테스트: 정상 동작');</textarea>
               if(typeof data.html==='string') el.html.value = data.html;
               if(typeof data.css==='string')  el.css.value  = data.css;
               if(typeof data.js==='string')   el.js.value   = data.js;
-            }else if(ext==='html' || ext==='htm'){ el.html.value = text; }
+            } else if(ext==='html' || ext==='htm'){ el.html.value = text; }
             else if(ext==='css'){ el.css.value = text; }
             else if(ext==='js'){ el.js.value = text; }
-            else{
+            else {
               const H = text.split(/===HTML===/i)[1], C = text.split(/===CSS===/i)[1], J = text.split(/===JS===/i)[1];
               if(H && C && J){ el.html.value = H.split(/===CSS===/i)[0].trim(); el.css.value = C.split(/===JS===/i)[0].trim(); el.js.value = J.trim(); }
               else { el.html.value = text; }
             }
-            updateAllLineNumbers();
-            render();
-          }catch(err){ alert('파일을 읽는 중 오류: JSON/TXT/HTML/CSS/JS를 지원합니다.'); }
+            persist(); updateAllLineNumbers(); render(); updateStatus();
+            showToast('파일을 불러왔어요');
+          }catch(err){ showToast('파일을 읽는 중 오류가 발생했어요'); }
         };
         reader.readAsText(file); e.target.value='';
       });
 
-      document.addEventListener('keydown', (e)=>{ if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); render(); } });
+      // 단축키: 실행
+      document.addEventListener('keydown', (e)=>{
+        if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); run(); }
+        if(e.key==='Escape'){ if(el.dlDialog.open) closeDownload(); if(el.learnDialog.open) closeLearn(); }
+      });
     }
 
-    return { init, render, toggleAuto, toggleTheme, setDesktop, setMobile, switchTab, openDownload, closeDownload, confirmDownload, reset, hardReset };
+    return { init, render, run, refreshPreview, openInNew, toggleAuto, toggleTheme, setDesktop, setMobile, switchTab, openDownload, closeDownload, confirmDownload, reset, hardReset, openLearn, closeLearn, learnTab, copyCurrent, toggleConsole, clearConsole };
   })();
 
   CC.init();
