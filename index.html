@@ -135,6 +135,62 @@
   .iconbtn .dot{ position:absolute; top:5px; right:5px; width:7px; height:7px; border-radius:50%; background:var(--err); display:none; box-shadow:0 0 0 2px var(--surface); }
   .iconbtn.has-error .dot{ display:block; }
 
+  /* 글자 라벨이 있는 버튼 */
+  .iconbtn.labeled{ width:auto; gap:7px; padding:8px 13px; font-size:13px; font-weight:600; font-family:var(--sans); white-space:nowrap; }
+  .iconbtn.labeled .lbl{ line-height:1; }
+  /* 주요 실행 버튼 */
+  .iconbtn.primary{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .iconbtn.primary:hover{ background:var(--accent-2); color:#fff; }
+  .iconbtn.primary.active{ background:var(--accent); color:#fff; }
+  @media (max-width: 560px){ .iconbtn.labeled .lbl{ display:none; } .iconbtn.labeled{ padding:8px; width:auto; } }
+
+  /* 더보기 드롭다운 메뉴 */
+  .menu-wrap{ position:relative; flex:0 0 auto; }
+  .menu{
+    position:absolute; top:calc(100% + 6px); right:0; z-index:60;
+    min-width:208px; padding:6px; border:1px solid var(--border); border-radius:12px;
+    background:var(--surface); box-shadow:var(--shadow-lg);
+    display:none; flex-direction:column; gap:1px;
+  }
+  .menu.open{ display:flex; animation:dlgin .14s ease; }
+  .menu-item{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    border:0; background:transparent; color:var(--text); cursor:pointer;
+    padding:9px 11px; border-radius:8px; font-size:13px; font-weight:500; font-family:var(--sans);
+    transition: background var(--transition), color var(--transition);
+  }
+  .menu-item:hover{ background:var(--surface-2); }
+  .menu-item svg{ width:17px; height:17px; flex:0 0 auto; color:var(--muted); }
+  .menu-item .check{ width:17px; opacity:0; color:var(--accent); }
+  .menu-item.on .check{ opacity:1; }
+  .menu-item.on{ color:var(--accent); }
+  .menu-item.danger{ color:var(--err); }
+  .menu-item.danger svg{ color:var(--err); }
+  .menu-item.danger:hover{ background:color-mix(in srgb, var(--err) 10%, transparent); }
+  .menu-sep{ height:1px; background:var(--border); margin:5px 4px; }
+
+  /* ===================== 예제 설명 띠 ===================== */
+  .exnote{
+    display:flex; align-items:flex-start; gap:10px;
+    padding:10px 12px; border-bottom:1px solid var(--border);
+    background:var(--accent-soft); color:var(--text); font-size:12.5px; line-height:1.5;
+  }
+  .exnote.hidden{ display:none; }
+  .exnote .lang{
+    flex:0 0 auto; display:inline-flex; align-items:center; gap:5px;
+    font-weight:800; font-size:11px; letter-spacing:.02em;
+    padding:3px 8px; border-radius:999px; background:var(--surface); color:var(--text);
+    border:1px solid var(--border);
+  }
+  .exnote .lang .tdot{ width:8px; height:8px; border-radius:2px; }
+  .exnote .lang[data-l="html"] .tdot{ background:#e44d26; }
+  .exnote .lang[data-l="css"]  .tdot{ background:#2965f1; }
+  .exnote .lang[data-l="js"]   .tdot{ background:#f0db4f; }
+  .exnote .txt{ flex:1; min-width:0; padding-top:2px; }
+  .exnote .txt b{ color:var(--accent); }
+  .exnote .x{ flex:0 0 auto; border:0; background:transparent; color:var(--muted); cursor:pointer; font-size:18px; line-height:1; padding:0 2px; border-radius:6px; }
+  .exnote .x:hover{ color:var(--text); }
+
   /* ===================== 탭 ===================== */
   .tabs{
     display:flex; align-items:center; justify-content:space-between; gap:8px;
@@ -384,71 +440,67 @@
       <div class="wordmark">코딩 캔버스<small>Coding Canvas</small></div>
     </div>
     <div class="toolbar" role="toolbar" aria-label="도구 모음">
-      <!-- 실행 -->
-      <div class="tgroup" aria-label="실행">
-        <button id="run" class="iconbtn" title="실행 (Ctrl/⌘+Enter)" aria-label="실행" onclick="CC.run()">
-          <svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20" fill="currentColor"></polygon></svg>
-        </button>
-        <button id="autorunBtn" class="iconbtn" title="자동실행 켜기/끄기" aria-label="자동실행 토글" onclick="CC.toggleAuto()">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"></path></svg>
-        </button>
-      </div>
+      <!-- 실행 (주요 동작) -->
+      <button id="run" class="iconbtn primary labeled" title="실행 (Ctrl/⌘+Enter)" aria-label="실행" onclick="CC.run()">
+        <svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20" fill="currentColor"></polygon></svg>
+        <span class="lbl">실행</span>
+      </button>
       <span class="sep"></span>
-      <!-- 미리보기 -->
-      <div class="tgroup" aria-label="미리보기">
-        <button id="refresh" class="iconbtn" title="미리보기 새로고침" aria-label="새로고침" onclick="CC.refreshPreview()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>
-        </button>
-        <button id="openNew" class="iconbtn" title="새 탭에서 열기" aria-label="새 탭에서 열기" onclick="CC.openInNew()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"></path><path d="M20 4l-8 8"></path><path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5"></path></svg>
-        </button>
-      </div>
+      <!-- 화면 크기 전환 (데스크톱 ↔ 모바일) -->
+      <button id="deviceBtn" class="iconbtn" title="모바일 화면으로 보기" aria-label="화면 크기 전환" onclick="CC.toggleDevice()">
+        <svg id="deviceIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"></rect><path d="M8 20h8"></path></svg>
+      </button>
+      <!-- 콘솔 펼치기/접기 -->
+      <button id="consoleToggle" class="iconbtn" title="콘솔 펼치기/접기" aria-label="콘솔 토글" onclick="CC.toggleConsole()">
+        <span class="dot"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 9l3 3-3 3"></path><path d="M13 15h4"></path></svg>
+      </button>
       <span class="sep"></span>
-      <!-- 화면 크기 -->
-      <div class="tgroup" aria-label="화면 크기">
-        <button id="desktop" class="iconbtn active" title="데스크톱 보기" aria-label="데스크톱" onclick="CC.setDesktop()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"></rect><path d="M8 20h8"></path></svg>
-        </button>
-        <button id="mobile" class="iconbtn" title="모바일 보기 (375px)" aria-label="모바일" onclick="CC.setMobile()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"></rect><path d="M11 18h2"></path></svg>
-        </button>
-      </div>
-      <span class="sep"></span>
-      <!-- 콘솔 -->
-      <div class="tgroup" aria-label="콘솔">
-        <button id="consoleToggle" class="iconbtn" title="콘솔 펼치기/접기" aria-label="콘솔 토글" onclick="CC.toggleConsole()">
-          <span class="dot"></span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 9l3 3-3 3"></path><path d="M13 15h4"></path></svg>
-        </button>
-      </div>
-      <span class="sep"></span>
-      <!-- 파일 -->
-      <div class="tgroup" aria-label="파일">
-        <button id="save" class="iconbtn" title="다운로드" aria-label="다운로드" onclick="CC.openDownload()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"></path><path d="M7 12l5 5 5-5"></path><path d="M5 21h14"></path></svg>
+      <!-- 예제 · 도움말 -->
+      <button id="learn" class="iconbtn labeled" title="예제 · 학습 도움말" aria-label="예제 및 도움말" onclick="CC.openLearn()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"></path><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"></path></svg>
+        <span class="lbl">예제·도움말</span>
+      </button>
+      <!-- 테마 -->
+      <button id="theme" class="iconbtn" title="라이트/다크 전환" aria-label="테마 전환" onclick="CC.toggleTheme()">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+        </svg>
+      </button>
+    </div>
+    <span class="sep"></span>
+    <!-- 더보기 메뉴 (보조 기능 모음 · 스크롤 영역 밖에 두어 드롭다운이 잘리지 않게) -->
+    <div class="menu-wrap">
+        <button id="menuBtn" class="iconbtn" title="더보기" aria-label="더보기 메뉴" aria-haspopup="true" aria-expanded="false" onclick="CC.toggleMenu()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>
         </button>
         <input id="loadInput" type="file" accept=".json,.txt,.html,.htm,.css,.js" class="hidden" />
-        <button id="load" class="iconbtn" title="불러오기 / 파일 열기" aria-label="불러오기" onclick="document.getElementById('loadInput').click()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path></svg>
-        </button>
-        <button id="reset" class="iconbtn" title="기본 코드로 초기화" aria-label="초기화" onclick="CC.reset()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>
-        </button>
+        <div class="menu" id="menu" role="menu" aria-label="더보기">
+          <button class="menu-item on" id="autoItem" role="menuitemcheckbox" aria-checked="true" onclick="CC.toggleAuto()">
+            <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>자동 실행</span>
+          </button>
+          <div class="menu-sep"></div>
+          <button class="menu-item" role="menuitem" onclick="CC.openInNew(); CC.closeMenu()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"></path><path d="M20 4l-8 8"></path><path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5"></path></svg>
+            <span>새 탭에서 열기</span>
+          </button>
+          <button class="menu-item" role="menuitem" onclick="CC.openDownload(); CC.closeMenu()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"></path><path d="M7 12l5 5 5-5"></path><path d="M5 21h14"></path></svg>
+            <span>다운로드</span>
+          </button>
+          <button class="menu-item" role="menuitem" onclick="document.getElementById('loadInput').click(); CC.closeMenu()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path></svg>
+            <span>불러오기</span>
+          </button>
+          <div class="menu-sep"></div>
+          <button class="menu-item danger" role="menuitem" onclick="CC.reset()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>
+            <span>기본 코드로 초기화</span>
+          </button>
+        </div>
       </div>
-      <span class="sep"></span>
-      <!-- 도움 -->
-      <div class="tgroup" aria-label="도움 · 설정">
-        <button id="learn" class="iconbtn" title="학습 도움말 · 예제" aria-label="학습 도움말" onclick="CC.openLearn()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"></path><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"></path></svg>
-        </button>
-        <button id="theme" class="iconbtn" title="라이트/다크 전환" aria-label="테마 전환" onclick="CC.toggleTheme()">
-          <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="4"></circle>
-            <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
-          </svg>
-        </button>
-      </div>
-    </div>
   </header>
 
   <main class="app">
@@ -464,6 +516,13 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg>
           복사
         </button>
+      </div>
+
+      <!-- 예제 설명 띠 : 선택한 예제에서 현재 탭(HTML/CSS/JS)이 하는 역할을 안내 -->
+      <div class="exnote hidden" id="exNote">
+        <span class="lang" id="exNoteLang" data-l="html"><span class="tdot"></span><span class="lt">HTML</span></span>
+        <span class="txt" id="exNoteText"></span>
+        <button class="x" type="button" title="설명 숨기기" aria-label="설명 닫기" onclick="CC.dismissNote()">×</button>
       </div>
 
       <div class="editors">
@@ -675,16 +734,16 @@ el.style.color = "red";</code></pre>
           <tr><td>가운데 구분선 드래그</td><td>좌우 패널 너비 조절</td></tr>
           <tr><td>구분선 더블클릭</td><td>좌우 너비를 균등하게</td></tr>
         </table>
-        <h4>아이콘 안내</h4>
+        <h4>상단 버튼 안내</h4>
         <ul class="iconhelp">
-          <li><b>▶ 실행</b> · 코드를 미리보기에 반영</li>
-          <li><b>⚡ 자동실행</b> · 입력할 때마다 자동 반영 (켜짐/꺼짐 토글)</li>
-          <li><b>🎓 학습</b> · 이 도움말과 예제 열기</li>
-          <li><b>☀ 테마</b> · 라이트/다크 화면 전환</li>
-          <li><b>⤓ 다운로드 / 📂 불러오기</b> · 프로젝트 저장 및 열기</li>
-          <li><b>↺ 초기화</b> · 기본 코드로 되돌리기</li>
-          <li><b>⌗ 콘솔</b> · console.log 출력과 오류 확인</li>
+          <li><b>실행</b> · 작성한 코드를 미리보기에 반영해요</li>
+          <li><b>화면(□)</b> · 데스크톱 ↔ 모바일(375px) 보기를 전환해요</li>
+          <li><b>콘솔(⌗)</b> · console.log 출력과 오류를 펼쳐 보거나 접어요</li>
+          <li><b>예제·도움말</b> · 이 도움말과 예제 모음을 열어요</li>
+          <li><b>테마(☀)</b> · 라이트/다크 화면을 전환해요</li>
+          <li><b>더보기(⋮)</b> · 자동 실행, 새 탭 열기, 다운로드, 불러오기, 초기화</li>
         </ul>
+        <p class="tip">자주 쓰지 않는 기능은 <b>더보기(⋮)</b> 메뉴에 모아 두었어요. 콘솔은 아래쪽 <b>콘솔</b> 막대를 눌러 접거나 펼칠 수도 있어요.</p>
         <p class="tip">작성한 코드는 브라우저에 자동 저장돼요. 다음에 다시 와도 이어서 작업할 수 있어요.</p>
       </div>
     </div>
@@ -713,8 +772,10 @@ el.style.color = "red";</code></pre>
       html: $('html'), css: $('css'), js: $('js'),
       htmlLines: $('htmlLines'), cssLines: $('cssLines'), jsLines: $('jsLines'),
       view: $('view'), previewBox: $('previewBox'),
-      runBtn: $('run'), autorunBtn: $('autorunBtn'), themeIcon: $('themeIcon'),
-      desktop: $('desktop'), mobile: $('mobile'),
+      runBtn: $('run'), themeIcon: $('themeIcon'),
+      deviceBtn: $('deviceBtn'), deviceIcon: $('deviceIcon'),
+      menu: $('menu'), menuBtn: $('menuBtn'), autoItem: $('autoItem'),
+      exNote: $('exNote'), exNoteLang: $('exNoteLang'), exNoteText: $('exNoteText'),
       dlDialog: $('dlDialog'), learnDialog: $('learnDialog'),
       loadInput: $('loadInput'), splitter: $('splitter'), copyBtn: $('copyBtn'),
       consoleEl: $('consoleEl'), consoleHead: $('consoleHead'), consoleBody: $('consoleBody'), consoleBadge: $('consoleBadge'), consoleToggle: $('consoleToggle'),
@@ -728,6 +789,8 @@ el.style.color = "red";</code></pre>
     let autoOn = true;
     let activeTab = 'html';
     let consoleExpanded = true, consoleCount = 0, consoleErrors = 0;
+    let deviceMode = 'desktop';
+    let currentNote = null;
 
     /* iframe 안에서 실행되어 console / 오류를 부모로 전달하는 브릿지 스크립트 */
     const CONSOLE_BRIDGE = `
@@ -810,8 +873,25 @@ el.style.color = "red";</code></pre>
     }
 
     /* ===================== 자동실행 ===================== */
-    function setAuto(on){ autoOn = !!on; el.autorunBtn.classList.toggle('active', autoOn); el.autorunBtn.title = autoOn? '자동실행 켜짐 (끄려면 클릭)' : '자동실행 꺼짐 (켜려면 클릭)'; localStorage.setItem(KEY.auto, autoOn?'1':'0'); }
-    function toggleAuto(){ setAuto(!autoOn); showToast(autoOn? '자동실행 켜짐' : '자동실행 꺼짐'); if(autoOn) render(); }
+    function setAuto(on){
+      autoOn = !!on;
+      if(el.autoItem){ el.autoItem.classList.toggle('on', autoOn); el.autoItem.setAttribute('aria-checked', autoOn?'true':'false'); }
+      localStorage.setItem(KEY.auto, autoOn?'1':'0');
+    }
+    function toggleAuto(){ setAuto(!autoOn); showToast(autoOn? '자동 실행 켜짐' : '자동 실행 꺼짐'); if(autoOn) render(); }
+
+    /* ===================== 더보기 메뉴 ===================== */
+    function toggleMenu(){
+      const open = !el.menu.classList.contains('open');
+      el.menu.classList.toggle('open', open);
+      el.menuBtn.classList.toggle('active', open);
+      el.menuBtn.setAttribute('aria-expanded', open?'true':'false');
+    }
+    function closeMenu(){
+      el.menu.classList.remove('open');
+      el.menuBtn.classList.remove('active');
+      el.menuBtn.setAttribute('aria-expanded','false');
+    }
 
     /* ===================== 탭 ===================== */
     function switchTab(which){
@@ -822,7 +902,21 @@ el.style.color = "red";</code></pre>
       updateLineNumbers(which);
       el[which].focus();
       updateStatus();
+      updateExNote();
     }
+
+    /* ===================== 예제 설명 띠 ===================== */
+    function setNote(note){ currentNote = note || null; updateExNote(); }
+    function updateExNote(){
+      const n = currentNote;
+      if(!n || !n[activeTab]){ el.exNote.classList.add('hidden'); return; }
+      el.exNoteLang.dataset.l = activeTab;
+      el.exNoteLang.querySelector('.lt').textContent = activeTab.toUpperCase();
+      el.exNoteText.textContent = n[activeTab];
+      el.exNote.classList.remove('hidden');
+    }
+    function dismissNote(){ currentNote = null; el.exNote.classList.add('hidden'); }
+    function noteFor(id){ const ex = EXAMPLES.find(e=>e.id===id); return (ex && ex.note) ? ex.note : null; }
 
     /* ===================== 줄 번호 ===================== */
     function updateLineNumbers(which){
@@ -908,9 +1002,20 @@ el.style.color = "red";</code></pre>
       setThemeIcon(dark);
     }
 
-    /* ===================== 미리보기 폭 ===================== */
-    function setDesktop(){ el.desktop.classList.add('active'); el.mobile.classList.remove('active'); el.previewBox.classList.remove('is-mobile'); }
-    function setMobile(){ el.mobile.classList.add('active'); el.desktop.classList.remove('active'); el.previewBox.classList.add('is-mobile'); }
+    /* ===================== 미리보기 폭 (데스크톱 ↔ 모바일 토글) ===================== */
+    const DEV_ICON = {
+      desktop: '<rect x="3" y="4" width="18" height="12" rx="2"></rect><path d="M8 20h8"></path>',
+      mobile:  '<rect x="7" y="2" width="10" height="20" rx="2"></rect><path d="M11 18h2"></path>'
+    };
+    function setDevice(mode){
+      deviceMode = (mode==='mobile') ? 'mobile' : 'desktop';
+      const mobile = deviceMode==='mobile';
+      el.previewBox.classList.toggle('is-mobile', mobile);
+      el.deviceBtn.classList.toggle('active', mobile);
+      el.deviceBtn.title = mobile ? '데스크톱 화면으로 보기' : '모바일 화면으로 보기';
+      el.deviceIcon.innerHTML = DEV_ICON[deviceMode];
+    }
+    function toggleDevice(){ setDevice(deviceMode==='mobile' ? 'desktop' : 'mobile'); }
 
     /* ===================== 다운로드 ===================== */
     function openDownload(){ if (typeof el.dlDialog.showModal === 'function') el.dlDialog.showModal(); else el.dlDialog.setAttribute('open','open'); }
@@ -942,17 +1047,21 @@ el.style.color = "red";</code></pre>
 
     /* ===================== 초기화 ===================== */
     function reset(){
+      closeMenu();
       if(!confirm('현재 코드를 기본 예제로 되돌릴까요?\n(저장하지 않은 내용은 사라집니다)')) return;
       el.html.value=DEFAULTS.html; el.css.value=DEFAULTS.css; el.js.value=DEFAULTS.js;
+      setNote(noteFor('hello'));
       persist(); updateAllLineNumbers(); render(); updateStatus();
       showToast('기본 코드로 되돌렸어요');
     }
     function hardReset(){
       if(!confirm('처음 화면으로 되돌릴까요?\n작성한 코드, 테마, 레이아웃 등 저장된 모든 내용이 삭제됩니다.')) return;
+      closeMenu();
       Object.values(KEY).forEach(k=>localStorage.removeItem(k));
       el.html.value=DEFAULTS.html; el.css.value=DEFAULTS.css; el.js.value=DEFAULTS.js;
       document.documentElement.classList.remove('dark'); setThemeIcon(false);
-      setDesktop(); setAuto(true); el.root.style.setProperty('--left-col','1fr');
+      setDevice('desktop'); setAuto(true); el.root.style.setProperty('--left-col','1fr');
+      setNote(noteFor('hello'));
       switchTab('html'); updateAllLineNumbers(); render(); updateStatus();
       showToast('처음 상태로 되돌렸어요');
     }
@@ -967,8 +1076,18 @@ el.style.color = "red";</code></pre>
     ];
 
     const EXAMPLES = [
-      { id:'hello', cat:'basic', title:'기본 인사', desc:'HTML·CSS·JS가 함께 동작하는 가장 기본적인 예제' },
+      { id:'hello', cat:'basic', title:'기본 인사', desc:'HTML·CSS·JS가 함께 동작하는 가장 기본적인 예제',
+        note:{
+          html:'제목(h1)·문단(p)·버튼을 화면에 배치해요. 버튼의 onclick으로 JS 함수(showAlert)를 연결합니다.',
+          css:'글꼴·여백·배경색 같은 전체 분위기를 정하고, 버튼 색과 마우스를 올렸을 때(hover) 효과를 꾸며요.',
+          js:'showAlert() 함수가 새 메시지 상자를 만들어 화면에 추가하고, console.log로 콘솔에도 기록해요.'
+        } },
       { id:'card', cat:'layout', title:'프로필 카드', desc:'Flexbox와 그림자로 만드는 카드 UI',
+        note:{
+          html:'카드 안에 프로필 이미지·이름·소개·팔로우 버튼을 차례로 담았어요.',
+          css:'Flexbox로 카드를 화면 가운데 두고, 둥근 모서리와 그림자로 카드처럼 보이게 꾸며요.',
+          js:'팔로우 버튼을 누르면 글자와 색을 "팔로잉"으로 바꾸고, 다시 누르면 원래대로 되돌려요.'
+        },
         html:`<div class="card">
   <img class="avatar" src="https://i.pravatar.cc/160" alt="프로필 사진">
   <h2>김코딩</h2>
@@ -1007,6 +1126,11 @@ button:hover{ background:#4f46e5; }`,
   }
 }` },
       { id:'counter', cat:'interaction', title:'클릭 카운터', desc:'버튼 이벤트로 숫자를 늘리고 줄이기',
+        note:{
+          html:'숫자를 보여줄 영역과 +, −, 초기화 버튼을 배치하고, 각 버튼에 함수를 연결해요.',
+          css:'화면 가운데 정렬하고, 큰 숫자와 정사각형 버튼 모양을 꾸며요.',
+          js:'count 변수를 두고 버튼을 누를 때 값을 더하거나 빼서 화면을 다시 그려요(draw).'
+        },
         html:`<div class="counter">
   <p class="label">클릭 카운터</p>
   <div class="num" id="num">0</div>
@@ -1039,6 +1163,11 @@ function step(n){ count += n; draw(); console.log('현재 값:', count); }
 function reset(){ count = 0; draw(); console.log('초기화 되었습니다.'); }
 draw();` },
       { id:'todo', cat:'interaction', title:'할 일 목록', desc:'입력·추가·삭제로 배우는 DOM 조작',
+        note:{
+          html:'할 일을 적는 입력창과 추가 버튼, 그리고 목록이 쌓일 빈 ul을 배치해요.',
+          css:'입력창·버튼·목록 항목을 카드처럼 꾸미고, 삭제 버튼은 눈에 띄게 빨갛게 표시해요.',
+          js:'입력한 값으로 li를 새로 만들어 목록에 추가하고, 삭제 버튼으로 항목을 지워요. Enter 키로도 추가됩니다.'
+        },
         html:`<div class="todo">
   <h1>오늘 할 일</h1>
   <div class="row">
@@ -1084,6 +1213,11 @@ input.addEventListener('keydown', function(e){
   if(e.key === 'Enter'){ add(); }
 });` },
       { id:'palette', cat:'basic', title:'배경색 바꾸기', desc:'클릭으로 스타일을 바꾸는 이벤트 예제',
+        note:{
+          html:'제목, 현재 색상 코드를 보여줄 곳, 버튼을 담은 박스를 만들어요.',
+          css:'박스를 화면 가득 채우고, 배경색이 바뀔 때 부드럽게 변하도록 transition을 줘요.',
+          js:'버튼을 누르면 랜덤 색상 코드를 만들어 배경색과 글자를 함께 바꿔요.'
+        },
         html:`<div class="box" id="box">
   <h1>배경색을 바꿔보세요</h1>
   <p id="code">#ffffff</p>
@@ -1110,6 +1244,11 @@ function change(){
   console.log('새 배경색:', hex);
 }` },
       { id:'gallery', cat:'layout', title:'사진 갤러리', desc:'CSS Grid로 만드는 반응형 격자',
+        note:{
+          html:'색이 다른 칸 6개를 격자(grid) 안에 배치해요.',
+          css:'CSS Grid로 화면 크기에 따라 칸 수가 자동으로 바뀌는 반응형 격자를 만들고 hover 효과를 줘요.',
+          js:'각 칸을 클릭하면 몇 번 칸인지 콘솔에 기록해요.'
+        },
         html:`<h1>사진 갤러리</h1>
 <div class="grid">
   <div class="item" style="--c:#f472b6">1</div>
@@ -1141,6 +1280,11 @@ function change(){
 });` },
 
       { id:'buttons', cat:'layout', title:'버튼 스타일 모음', desc:'여러 가지 버튼 디자인을 한눈에 비교',
+        note:{
+          html:'같은 역할의 버튼 5개를 서로 다른 class로 나란히 배치해요.',
+          css:'class별로 색·테두리·모서리·그라데이션을 다르게 줘서 버튼 스타일을 비교해요.',
+          js:'버튼을 누르면 어떤 버튼을 눌렀는지 콘솔에 출력해요.'
+        },
         html:`<h1>버튼 스타일</h1>
 <div class="row">
   <button class="btn solid">기본</button>
@@ -1175,6 +1319,11 @@ function change(){
 });` },
 
       { id:'tabs', cat:'interaction', title:'탭 메뉴', desc:'버튼으로 내용을 전환하는 탭 UI',
+        note:{
+          html:'탭 버튼 3개와, 각 탭에 대응하는 내용 영역 3개를 배치해요.',
+          css:'선택된 탭에는 밑줄과 색을 주고, 내용은 보이는 것만 display로 표시해요.',
+          js:'탭을 누르면 data-i 번호를 읽어 그 번호의 내용만 보이도록 on 클래스를 바꿔요.'
+        },
         html:`<div class="tabs-wrap">
   <div class="tabbar">
     <button class="tab on" data-i="0">소개</button>
@@ -1212,6 +1361,11 @@ tabs.forEach(function(tab){
 });` },
 
       { id:'accordion', cat:'interaction', title:'FAQ 아코디언', desc:'클릭하면 답이 펼쳐지는 자주 묻는 질문',
+        note:{
+          html:'질문 버튼과 숨겨진 답변을 한 묶음(item)으로 만들어 여러 개 배치해요.',
+          css:'답변의 높이(max-height)를 0에서 펼치며 부드럽게 열리도록 transition을 줘요.',
+          js:'질문을 누르면 다른 항목은 닫고, 누른 항목만 open 클래스를 켜서 답을 펼쳐요.'
+        },
         html:`<h1>자주 묻는 질문</h1>
 <div class="faq">
   <div class="item">
@@ -1250,6 +1404,11 @@ tabs.forEach(function(tab){
 });` },
 
       { id:'spinner', cat:'anim', title:'로딩 스피너', desc:'@keyframes로 만드는 CSS 회전 애니메이션',
+        note:{
+          html:'회전하는 원과 통통 튀는 점 3개, 안내 문구를 배치해요.',
+          css:'핵심이에요! @keyframes로 원을 360도 회전시키고 점을 위아래로 움직여요. (JS 없이 동작)',
+          js:'1초마다 로딩 경과를 콘솔에 출력해요. 움직임 자체는 CSS가 담당합니다.'
+        },
         html:`<div class="wrap">
   <div class="spinner"></div>
   <div class="dots"><span></span><span></span><span></span></div>
@@ -1279,6 +1438,11 @@ let n = 0;
 setInterval(function(){ n++; if(n<=3) console.log('로딩 ' + n + '초...'); }, 1000);` },
 
       { id:'clock', cat:'anim', title:'디지털 시계', desc:'setInterval로 1초마다 시간을 갱신',
+        note:{
+          html:'시간과 날짜를 표시할 두 개의 영역만 간단히 만들어요.',
+          css:'큰 숫자와 그라데이션 배경으로 시계처럼 꾸미고, 숫자 폭을 고정(tabular-nums)해 떨리지 않게 해요.',
+          js:'setInterval로 1초마다 현재 시각을 읽어와 화면 글자를 갱신해요(tick).'
+        },
         html:`<div class="clock">
   <div class="time" id="time">00:00:00</div>
   <div class="date" id="date">날짜</div>
@@ -1305,6 +1469,11 @@ setInterval(tick, 1000);
 console.log('시계가 시작되었습니다.');` },
 
       { id:'rps', cat:'game', title:'가위바위보', desc:'조건문과 랜덤으로 만드는 미니 게임',
+        note:{
+          html:'가위·바위·보 버튼과, 결과·점수를 보여줄 영역을 배치해요.',
+          css:'화면 가운데 정렬하고 버튼과 결과 글자를 보기 좋게 꾸며요.',
+          js:'버튼을 누르면 컴퓨터가 랜덤으로 내고, 조건문(if)으로 승·무·패를 가려 점수를 갱신해요.'
+        },
         html:`<div class="game">
   <h1>가위바위보</h1>
   <div class="choices">
@@ -1346,6 +1515,11 @@ function play(me){
 }` },
 
       { id:'guess', cat:'game', title:'숫자 맞히기', desc:'1~100 사이 숫자를 추리하는 게임',
+        note:{
+          html:'숫자 입력창, 확인 버튼, 힌트 표시, 새 게임 버튼을 배치해요.',
+          css:'카드 형태로 화면 가운데 정렬하고 입력창과 버튼을 꾸며요.',
+          js:'1~100 랜덤 정답과 입력값을 비교해 "더 크게/작게" 힌트를 주고 시도 횟수를 세요.'
+        },
         html:`<div class="game">
   <h1>숫자 맞히기</h1>
   <p>1부터 100 사이의 숫자를 맞혀보세요.</p>
@@ -1419,6 +1593,7 @@ reset();` }
       if(!ex) return;
       if(!confirm('현재 코드를 이 예제로 바꿀까요?\n(저장하지 않은 내용은 사라집니다)')) return;
       el.html.value = ex.html; el.css.value = ex.css; el.js.value = ex.js;
+      setNote(noteFor(id));
       persist(); updateAllLineNumbers(); switchTab('html'); render(); updateStatus();
       closeLearn();
       showToast('예제를 불러왔어요');
@@ -1507,6 +1682,9 @@ reset();` }
       const cs = localStorage.getItem(KEY.css);  if(cs!==null) el.css.value  = cs;
       const jsS = localStorage.getItem(KEY.js);  if(jsS!==null) el.js.value  = jsS;
 
+      // 처음 방문(저장된 코드 없음)이면 기본 예제 설명을 띄워 안내
+      if(hs===null && cs===null && jsS===null){ currentNote = noteFor('hello'); }
+
       // 자동실행 / 활성 탭 / 콘솔 상태 복원
       setAuto(localStorage.getItem(KEY.auto)==='0' ? false : true);
       const savedTab = localStorage.getItem(KEY.tab); if(savedTab && ['html','css','js'].includes(savedTab)) activeTab = savedTab;
@@ -1556,14 +1734,19 @@ reset();` }
         });
       }
 
+      // 더보기 메뉴: 바깥을 클릭하면 닫기
+      document.addEventListener('click', (e)=>{
+        if(el.menu.classList.contains('open') && !e.target.closest('.menu-wrap')) closeMenu();
+      });
+
       // 단축키: 실행
       document.addEventListener('keydown', (e)=>{
         if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); run(); }
-        if(e.key==='Escape'){ if(el.dlDialog.open) closeDownload(); if(el.learnDialog.open) closeLearn(); }
+        if(e.key==='Escape'){ closeMenu(); if(el.dlDialog.open) closeDownload(); if(el.learnDialog.open) closeLearn(); }
       });
     }
 
-    return { init, render, run, refreshPreview, openInNew, toggleAuto, toggleTheme, setDesktop, setMobile, switchTab, openDownload, closeDownload, confirmDownload, reset, hardReset, openLearn, closeLearn, learnTab, copyCurrent, toggleConsole, clearConsole };
+    return { init, render, run, refreshPreview, openInNew, toggleAuto, toggleTheme, toggleDevice, setDevice, toggleMenu, closeMenu, dismissNote, switchTab, openDownload, closeDownload, confirmDownload, reset, hardReset, openLearn, closeLearn, learnTab, copyCurrent, toggleConsole, clearConsole };
   })();
 
   CC.init();
