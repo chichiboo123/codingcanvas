@@ -6,6 +6,12 @@
 <meta name="description" content="코딩 캔버스 - 브라우저에서 HTML·CSS·JS를 바로 작성하고 결과와 콘솔을 실시간으로 확인하는 코드 테스트 플랫폼" />
 <title>코딩 캔버스 (Coding Canvas)</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960' fill='%236366f1'%3E%3Cpath d='M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H160v400Zm160-40 56-56-64-64 64-64-56-56-120 120 120 120Zm320 0 120-120-120-120-56 56 64 64-64 64 56 56Z'/%3E%3C/svg%3E" type="image/svg+xml">
+<!-- 본문 글꼴: Pretendard GOV · 코드 글꼴: JetBrains Mono -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-gov-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
 <style>
   /* ===================== 디자인 토큰 ===================== */
   :root{
@@ -23,8 +29,8 @@
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --radius: 10px;
     --radius-lg: 14px;
-    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Fira Code', 'D2Coding', monospace;
-    --sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans KR', Arial, sans-serif;
+    --mono: 'JetBrains Mono', 'D2Coding', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Fira Code', monospace;
+    --sans: 'Pretendard GOV', 'Pretendard', 'Pretendard Variable', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans KR', Arial, sans-serif;
     --transition: .18s ease;
   }
   html.dark{
@@ -49,12 +55,12 @@
 
   /* ===================== 레이아웃 ===================== */
   .app{
-    flex:1; min-height:0;
+    flex:1 1 auto; min-height:0;
     display:grid;
     grid-template-columns: var(--left-col) var(--splitter-w) 1fr;
   }
   .left, .right{
-    height:calc(var(--vh) - var(--footer-h));
+    height:100%; min-height:0;
     display:flex; flex-direction:column; min-width:0; overflow:hidden;
   }
   .left{ grid-column:1; border-right:1px solid var(--border); background:var(--surface); }
@@ -78,24 +84,36 @@
   .splitter.dragging::after{ background:var(--accent); opacity:1; }
   .drag-overlay{ position:fixed; inset:0; z-index:9999; cursor:col-resize; background:transparent; touch-action:none; }
 
-  /* ===================== 상단바 ===================== */
-  .topbar, .previewbar{
-    display:flex; align-items:center; gap:10px;
-    padding:8px 12px; min-height:56px;
+  /* ===================== 상단 앱바 (통합 툴바) ===================== */
+  .appbar{
+    flex:0 0 auto;
+    display:flex; align-items:center; gap:14px;
+    padding:8px 14px; min-height:58px;
     border-bottom:1px solid var(--border); background:var(--surface);
     transition: background var(--transition), border-color var(--transition);
   }
-  .topbar{ justify-content:space-between; }
-  .brand{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .previewbar{
+    display:flex; align-items:center; gap:10px;
+    padding:8px 12px; min-height:46px;
+    border-bottom:1px solid var(--border); background:var(--surface);
+    transition: background var(--transition), border-color var(--transition);
+  }
+  .brand{ display:flex; align-items:center; gap:10px; min-width:0; flex:0 0 auto; }
   .logo{ display:flex; align-items:center; cursor:pointer; border-radius:8px; transition: opacity var(--transition); }
   .logo:hover{ opacity:.78; }
   .logo img{ height:38px; display:block; }
   .brand .wordmark{ font-weight:700; font-size:15px; letter-spacing:-.01em; white-space:nowrap; }
   .brand .wordmark small{ display:block; font-weight:500; font-size:11px; color:var(--muted); letter-spacing:.02em; }
 
-  .iconbar{ display:flex; align-items:center; gap:4px; overflow-x:auto; scrollbar-width:thin; -webkit-overflow-scrolling:touch; }
-  .iconbar::-webkit-scrollbar{ height:0; }
-  .sep{ width:1px; height:24px; background:var(--border); margin:0 2px; flex:0 0 auto; }
+  /* 통합 툴바 : 기능을 묶음(group)으로 나란히 배치 */
+  .toolbar{
+    flex:1 1 auto; display:flex; align-items:center; gap:6px;
+    justify-content:flex-end; overflow-x:auto; scrollbar-width:thin; -webkit-overflow-scrolling:touch;
+  }
+  .toolbar::-webkit-scrollbar{ height:0; }
+  .tgroup{ display:flex; align-items:center; gap:2px; flex:0 0 auto; }
+  .iconbar{ display:flex; align-items:center; gap:4px; }
+  .sep{ width:1px; height:24px; background:var(--border); margin:0 4px; flex:0 0 auto; }
 
   .iconbtn{
     position:relative;
@@ -184,9 +202,7 @@
   .hidden{ display:none !important; }
 
   /* ===================== 미리보기 ===================== */
-  .previewbar{ justify-content:space-between; }
   .previewbar .pv-label{ font-weight:700; font-size:13px; color:var(--muted); display:flex; align-items:center; gap:8px; }
-  .previewbar .pv-actions{ display:flex; align-items:center; gap:4px; }
 
   .preview{ flex:1; min-height:0; display:flex; align-items:stretch; justify-content:center; padding:14px; overflow:auto; background:var(--surface-2); }
   iframe{
@@ -196,18 +212,27 @@
   .preview.is-mobile{ align-items:flex-start; }
   .preview.is-mobile iframe{ width:375px !important; max-width:100%; flex:0 0 auto; }
 
-  /* ===================== 콘솔 ===================== */
+  /* ===================== 콘솔 (아코디언) ===================== */
   .console{
-    flex:0 0 auto; height:210px; display:flex; flex-direction:column;
+    flex:0 0 auto; display:flex; flex-direction:column;
     border-top:1px solid var(--border); background:var(--surface);
   }
-  .console.hidden{ display:none !important; }
+  .console.expanded{ height:230px; }
+  .console:not(.expanded) .console-body{ display:none; }
   .console-head{
     display:flex; align-items:center; justify-content:space-between; gap:8px;
-    padding:7px 12px; border-bottom:1px solid var(--border); background:var(--surface-2);
+    padding:8px 12px; background:var(--surface-2);
+    cursor:pointer; user-select:none;
+    border-bottom:1px solid transparent;
+    transition: background var(--transition), border-color var(--transition);
   }
+  .console-head:hover{ background:var(--surface-3); }
+  .console.expanded .console-head{ border-bottom-color:var(--border); }
+  .console-head:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
+  .con-chevron{ width:14px; height:14px; color:var(--muted); flex:0 0 auto; transition: transform var(--transition); }
+  .console:not(.expanded) .con-chevron{ transform:rotate(-90deg); }
   .console-title{ display:flex; align-items:center; gap:8px; font-weight:700; font-size:12px; color:var(--text); }
-  .console-title svg{ width:15px; height:15px; color:var(--muted); }
+  .console-title .ico{ width:15px; height:15px; color:var(--muted); }
   .badge{
     display:none; align-items:center; justify-content:center;
     min-width:18px; height:18px; padding:0 5px; border-radius:9px;
@@ -306,7 +331,11 @@
   kbd{ font-family:var(--mono); font-size:11px; background:var(--surface-2); border:1px solid var(--border); border-bottom-width:2px; border-radius:6px; padding:2px 7px; }
   .iconhelp{ margin:8px 0; padding-left:18px; color:var(--text); } .iconhelp li{ margin:5px 0; }
 
-  /* 예제 카드 */
+  /* 예제 카드 · 분류 */
+  .exlist{ display:flex; flex-direction:column; gap:22px; }
+  .excat-head{ display:flex; flex-direction:column; gap:1px; margin-bottom:10px; padding-bottom:7px; border-bottom:1px solid var(--border); }
+  .excat-title{ font-weight:800; font-size:15px; color:var(--text); }
+  .excat-desc{ color:var(--muted); font-size:12px; }
   .examples{ display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:12px; }
   .excard{ border:1px solid var(--border); border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:6px; transition: all var(--transition); }
   .excard:hover{ border-color:var(--accent); box-shadow:var(--shadow-sm); transform:translateY(-2px); }
@@ -336,54 +365,95 @@
     .editors{ flex:0 0 auto; height:46vh; }
     .editor, .line-numbers{ font-size:14px; }
     .preview{ flex:0 0 auto; height:46vh; min-height:38vh; }
-    .console{ height:30vh; }
-    .topbar, .previewbar{ position:sticky; top:0; z-index:20; min-height:52px; }
+    .console{ height:auto; }
+    .console.expanded{ height:30vh; }
+    .appbar{ position:sticky; top:0; z-index:30; min-height:52px; }
+    .toolbar{ justify-content:flex-start; }
+    .previewbar{ min-height:44px; }
   }
   @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
 </style>
 </head>
 <body>
+  <!-- ================= 통합 상단 툴바 ================= -->
+  <header class="appbar">
+    <div class="brand">
+      <a class="logo" href="#" onclick="CC.hardReset(); return false;" title="처음 화면으로 (전체 초기화)" aria-label="처음 화면으로">
+        <img src="https://i.ibb.co/Jw8sLtRy/002-2.png" alt="Coding Canvas 로고" onerror="this.style.display='none'">
+      </a>
+      <div class="wordmark">코딩 캔버스<small>Coding Canvas</small></div>
+    </div>
+    <div class="toolbar" role="toolbar" aria-label="도구 모음">
+      <!-- 실행 -->
+      <div class="tgroup" aria-label="실행">
+        <button id="run" class="iconbtn" title="실행 (Ctrl/⌘+Enter)" aria-label="실행" onclick="CC.run()">
+          <svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20" fill="currentColor"></polygon></svg>
+        </button>
+        <button id="autorunBtn" class="iconbtn" title="자동실행 켜기/끄기" aria-label="자동실행 토글" onclick="CC.toggleAuto()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"></path></svg>
+        </button>
+      </div>
+      <span class="sep"></span>
+      <!-- 미리보기 -->
+      <div class="tgroup" aria-label="미리보기">
+        <button id="refresh" class="iconbtn" title="미리보기 새로고침" aria-label="새로고침" onclick="CC.refreshPreview()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>
+        </button>
+        <button id="openNew" class="iconbtn" title="새 탭에서 열기" aria-label="새 탭에서 열기" onclick="CC.openInNew()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"></path><path d="M20 4l-8 8"></path><path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5"></path></svg>
+        </button>
+      </div>
+      <span class="sep"></span>
+      <!-- 화면 크기 -->
+      <div class="tgroup" aria-label="화면 크기">
+        <button id="desktop" class="iconbtn active" title="데스크톱 보기" aria-label="데스크톱" onclick="CC.setDesktop()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"></rect><path d="M8 20h8"></path></svg>
+        </button>
+        <button id="mobile" class="iconbtn" title="모바일 보기 (375px)" aria-label="모바일" onclick="CC.setMobile()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"></rect><path d="M11 18h2"></path></svg>
+        </button>
+      </div>
+      <span class="sep"></span>
+      <!-- 콘솔 -->
+      <div class="tgroup" aria-label="콘솔">
+        <button id="consoleToggle" class="iconbtn" title="콘솔 펼치기/접기" aria-label="콘솔 토글" onclick="CC.toggleConsole()">
+          <span class="dot"></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 9l3 3-3 3"></path><path d="M13 15h4"></path></svg>
+        </button>
+      </div>
+      <span class="sep"></span>
+      <!-- 파일 -->
+      <div class="tgroup" aria-label="파일">
+        <button id="save" class="iconbtn" title="다운로드" aria-label="다운로드" onclick="CC.openDownload()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"></path><path d="M7 12l5 5 5-5"></path><path d="M5 21h14"></path></svg>
+        </button>
+        <input id="loadInput" type="file" accept=".json,.txt,.html,.htm,.css,.js" class="hidden" />
+        <button id="load" class="iconbtn" title="불러오기 / 파일 열기" aria-label="불러오기" onclick="document.getElementById('loadInput').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path></svg>
+        </button>
+        <button id="reset" class="iconbtn" title="기본 코드로 초기화" aria-label="초기화" onclick="CC.reset()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>
+        </button>
+      </div>
+      <span class="sep"></span>
+      <!-- 도움 -->
+      <div class="tgroup" aria-label="도움 · 설정">
+        <button id="learn" class="iconbtn" title="학습 도움말 · 예제" aria-label="학습 도움말" onclick="CC.openLearn()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"></path><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"></path></svg>
+        </button>
+        <button id="theme" class="iconbtn" title="라이트/다크 전환" aria-label="테마 전환" onclick="CC.toggleTheme()">
+          <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
   <main class="app">
     <!-- ================= LEFT : 코드 ================= -->
     <section class="left">
-      <div class="topbar">
-        <div class="brand">
-          <a class="logo" href="#" onclick="CC.hardReset(); return false;" title="처음 화면으로 (전체 초기화)" aria-label="처음 화면으로">
-            <img src="https://i.ibb.co/Jw8sLtRy/002-2.png" alt="Coding Canvas 로고" onerror="this.style.display='none'">
-          </a>
-          <div class="wordmark">코딩 캔버스<small>Coding Canvas</small></div>
-        </div>
-        <div class="iconbar">
-          <button id="run" class="iconbtn" title="실행 (Ctrl/⌘+Enter)" aria-label="실행" onclick="CC.run()">
-            <svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20" fill="currentColor"></polygon></svg>
-          </button>
-          <button id="autorunBtn" class="iconbtn" title="자동실행 켜기/끄기" aria-label="자동실행 토글" onclick="CC.toggleAuto()">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"></path></svg>
-          </button>
-          <span class="sep"></span>
-          <button id="learn" class="iconbtn" title="학습 도움말 · 예제" aria-label="학습 도움말" onclick="CC.openLearn()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"></path><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5"></path></svg>
-          </button>
-          <button id="theme" class="iconbtn" title="라이트/다크 전환" aria-label="테마 전환" onclick="CC.toggleTheme()">
-            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="4"></circle>
-              <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
-            </svg>
-          </button>
-          <span class="sep"></span>
-          <button id="save" class="iconbtn" title="다운로드" aria-label="다운로드" onclick="CC.openDownload()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"></path><path d="M7 12l5 5 5-5"></path><path d="M5 21h14"></path></svg>
-          </button>
-          <input id="loadInput" type="file" accept=".json,.txt,.html,.htm,.css,.js" class="hidden" />
-          <button id="load" class="iconbtn" title="불러오기 / 파일 열기" aria-label="불러오기" onclick="document.getElementById('loadInput').click()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path></svg>
-          </button>
-          <button id="reset" class="iconbtn" title="기본 코드로 초기화" aria-label="초기화" onclick="CC.reset()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>
-          </button>
-        </div>
-      </div>
-
       <div class="tabs">
         <div class="tabgroup" role="tablist">
           <button class="tab active" type="button" data-for="html" onclick="CC.switchTab('html')"><span class="tdot"></span>HTML</button>
@@ -457,42 +527,22 @@ console.log('콘솔이 정상 동작합니다 ✔');</textarea>
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path></svg>
           미리보기
         </span>
-        <div class="pv-actions">
-          <button id="refresh" class="iconbtn" title="새로고침" aria-label="새로고침" onclick="CC.refreshPreview()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>
-          </button>
-          <button id="openNew" class="iconbtn" title="새 탭에서 열기" aria-label="새 탭에서 열기" onclick="CC.openInNew()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"></path><path d="M20 4l-8 8"></path><path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5"></path></svg>
-          </button>
-          <span class="sep"></span>
-          <button id="desktop" class="iconbtn active" title="데스크톱 보기" aria-label="데스크톱" onclick="CC.setDesktop()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"></rect><path d="M8 20h8"></path></svg>
-          </button>
-          <button id="mobile" class="iconbtn" title="모바일 보기 (375px)" aria-label="모바일" onclick="CC.setMobile()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"></rect><path d="M11 18h2"></path></svg>
-          </button>
-          <span class="sep"></span>
-          <button id="consoleToggle" class="iconbtn" title="콘솔 켜기/끄기" aria-label="콘솔 토글" onclick="CC.toggleConsole()">
-            <span class="dot"></span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 9l3 3-3 3"></path><path d="M13 15h4"></path></svg>
-          </button>
-        </div>
       </div>
 
       <div class="preview" id="previewBox">
         <iframe id="view" title="미리보기"></iframe>
       </div>
 
-      <div class="console hidden" id="consoleEl">
-        <div class="console-head">
+      <div class="console expanded" id="consoleEl">
+        <div class="console-head" id="consoleHead" role="button" tabindex="0" aria-expanded="true" aria-controls="consoleBody" title="콘솔 펼치기/접기" onclick="CC.toggleConsole()">
           <span class="console-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4-4 4"></path><path d="M12 16h6"></path></svg>
+            <svg class="con-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4-4 4"></path><path d="M12 16h6"></path></svg>
             콘솔
             <span class="badge" id="consoleBadge">0</span>
           </span>
           <div class="console-actions">
-            <button class="minibtn" onclick="CC.clearConsole()" title="콘솔 지우기">지우기</button>
-            <button class="minibtn" onclick="CC.toggleConsole()" title="콘솔 닫기" aria-label="콘솔 닫기">✕</button>
+            <button class="minibtn" onclick="event.stopPropagation(); CC.clearConsole()" title="콘솔 지우기">지우기</button>
           </div>
         </div>
         <div class="console-body" id="consoleBody"></div>
@@ -612,8 +662,8 @@ el.style.color = "red";</code></pre>
       <!-- 예제 -->
       <div class="lpane hidden" data-l="ex">
         <h3>예제로 시작하기</h3>
-        <p>마음에 드는 예제를 불러와 코드를 바꿔보며 배워보세요.</p>
-        <div class="examples" id="examplesGrid"></div>
+        <p>난이도·주제별로 정리했어요. 마음에 드는 예제를 불러와 코드를 바꿔보며 배워보세요.</p>
+        <div class="exlist" id="examplesGrid"></div>
       </div>
 
       <!-- 단축키 -->
@@ -667,7 +717,7 @@ el.style.color = "red";</code></pre>
       desktop: $('desktop'), mobile: $('mobile'),
       dlDialog: $('dlDialog'), learnDialog: $('learnDialog'),
       loadInput: $('loadInput'), splitter: $('splitter'), copyBtn: $('copyBtn'),
-      consoleEl: $('consoleEl'), consoleBody: $('consoleBody'), consoleBadge: $('consoleBadge'), consoleToggle: $('consoleToggle'),
+      consoleEl: $('consoleEl'), consoleHead: $('consoleHead'), consoleBody: $('consoleBody'), consoleBadge: $('consoleBadge'), consoleToggle: $('consoleToggle'),
       examplesGrid: $('examplesGrid'), toast: $('toast'),
       stLang: $('stLang'), stPos: $('stPos'), stLines: $('stLines'), stChars: $('stChars'),
       root: document.documentElement
@@ -677,7 +727,7 @@ el.style.color = "red";</code></pre>
 
     let autoOn = true;
     let activeTab = 'html';
-    let consoleVisible = false, consoleCount = 0, consoleErrors = 0;
+    let consoleExpanded = true, consoleCount = 0, consoleErrors = 0;
 
     /* iframe 안에서 실행되어 console / 오류를 부모로 전달하는 브릿지 스크립트 */
     const CONSOLE_BRIDGE = `
@@ -802,13 +852,17 @@ el.style.color = "red";</code></pre>
 
     /* ===================== 콘솔 ===================== */
     function setConsole(on){
-      consoleVisible = !!on;
-      el.consoleEl.classList.toggle('hidden', !consoleVisible);
-      el.consoleToggle.classList.toggle('active', consoleVisible);
-      localStorage.setItem(KEY.con, consoleVisible?'1':'0');
-      if(consoleVisible) el.consoleToggle.classList.remove('has-error');
+      consoleExpanded = !!on;
+      el.consoleEl.classList.toggle('expanded', consoleExpanded);
+      el.consoleToggle.classList.toggle('active', consoleExpanded);
+      if(el.consoleHead) el.consoleHead.setAttribute('aria-expanded', consoleExpanded ? 'true' : 'false');
+      localStorage.setItem(KEY.con, consoleExpanded?'1':'0');
+      if(consoleExpanded){
+        el.consoleToggle.classList.remove('has-error');
+        el.consoleBody.scrollTop = el.consoleBody.scrollHeight;
+      }
     }
-    function toggleConsole(){ setConsole(!consoleVisible); }
+    function toggleConsole(){ setConsole(!consoleExpanded); }
     function updateBadge(){
       el.consoleBadge.textContent = consoleCount;
       el.consoleBadge.style.display = consoleCount ? 'inline-flex' : 'none';
@@ -838,7 +892,7 @@ el.style.color = "red";</code></pre>
       el.consoleBody.appendChild(line);
       el.consoleBody.scrollTop = el.consoleBody.scrollHeight;
       updateBadge();
-      if(!consoleVisible && level==='error') el.consoleToggle.classList.add('has-error');
+      if(!consoleExpanded && level==='error') el.consoleToggle.classList.add('has-error');
     }
 
     /* ===================== 테마 ===================== */
@@ -904,9 +958,17 @@ el.style.color = "red";</code></pre>
     }
 
     /* ===================== 예제 ===================== */
+    const EX_CATS = [
+      { id:'basic',       label:'① 기초 — 첫걸음',         desc:'HTML·CSS·JS가 어떻게 함께 동작하는지 익혀요.' },
+      { id:'layout',      label:'② 레이아웃 & 디자인',      desc:'화면을 배치하고 예쁘게 꾸미는 연습이에요.' },
+      { id:'interaction', label:'③ 인터랙션 & 이벤트',      desc:'클릭·입력에 반응하며 DOM을 다뤄봐요.' },
+      { id:'anim',        label:'④ 애니메이션 & 그래픽',    desc:'움직임·시간·그리기를 다루는 예제예요.' },
+      { id:'game',        label:'⑤ 미니 게임 & 알고리즘',  desc:'간단한 로직으로 만드는 작은 프로그램이에요.' }
+    ];
+
     const EXAMPLES = [
-      { id:'hello', title:'기본 인사', desc:'HTML·CSS·JS가 함께 동작하는 가장 기본적인 예제' },
-      { id:'card', title:'프로필 카드', desc:'Flexbox와 그림자로 만드는 카드 UI',
+      { id:'hello', cat:'basic', title:'기본 인사', desc:'HTML·CSS·JS가 함께 동작하는 가장 기본적인 예제' },
+      { id:'card', cat:'layout', title:'프로필 카드', desc:'Flexbox와 그림자로 만드는 카드 UI',
         html:`<div class="card">
   <img class="avatar" src="https://i.pravatar.cc/160" alt="프로필 사진">
   <h2>김코딩</h2>
@@ -944,7 +1006,7 @@ button:hover{ background:#4f46e5; }`,
     console.log('팔로우를 취소했습니다.');
   }
 }` },
-      { id:'counter', title:'클릭 카운터', desc:'버튼 이벤트로 숫자를 늘리고 줄이기',
+      { id:'counter', cat:'interaction', title:'클릭 카운터', desc:'버튼 이벤트로 숫자를 늘리고 줄이기',
         html:`<div class="counter">
   <p class="label">클릭 카운터</p>
   <div class="num" id="num">0</div>
@@ -976,7 +1038,7 @@ function draw(){ num.textContent = count; }
 function step(n){ count += n; draw(); console.log('현재 값:', count); }
 function reset(){ count = 0; draw(); console.log('초기화 되었습니다.'); }
 draw();` },
-      { id:'todo', title:'할 일 목록', desc:'입력·추가·삭제로 배우는 DOM 조작',
+      { id:'todo', cat:'interaction', title:'할 일 목록', desc:'입력·추가·삭제로 배우는 DOM 조작',
         html:`<div class="todo">
   <h1>오늘 할 일</h1>
   <div class="row">
@@ -1021,7 +1083,7 @@ function add(){
 input.addEventListener('keydown', function(e){
   if(e.key === 'Enter'){ add(); }
 });` },
-      { id:'palette', title:'배경색 바꾸기', desc:'클릭으로 스타일을 바꾸는 이벤트 예제',
+      { id:'palette', cat:'basic', title:'배경색 바꾸기', desc:'클릭으로 스타일을 바꾸는 이벤트 예제',
         html:`<div class="box" id="box">
   <h1>배경색을 바꿔보세요</h1>
   <p id="code">#ffffff</p>
@@ -1047,7 +1109,7 @@ function change(){
   code.textContent = hex;
   console.log('새 배경색:', hex);
 }` },
-      { id:'gallery', title:'사진 갤러리', desc:'CSS Grid로 만드는 반응형 격자',
+      { id:'gallery', cat:'layout', title:'사진 갤러리', desc:'CSS Grid로 만드는 반응형 격자',
         html:`<h1>사진 갤러리</h1>
 <div class="grid">
   <div class="item" style="--c:#f472b6">1</div>
@@ -1076,19 +1138,280 @@ function change(){
   it.addEventListener('click', function(){
     console.log(it.textContent + '번 사진을 클릭했어요');
   });
-});` }
+});` },
+
+      { id:'buttons', cat:'layout', title:'버튼 스타일 모음', desc:'여러 가지 버튼 디자인을 한눈에 비교',
+        html:`<h1>버튼 스타일</h1>
+<div class="row">
+  <button class="btn solid">기본</button>
+  <button class="btn outline">테두리</button>
+  <button class="btn ghost">고스트</button>
+  <button class="btn pill">알약</button>
+  <button class="btn grad">그라데이션</button>
+</div>`,
+        css:`body{
+  margin:0; min-height:100vh; display:flex;
+  flex-direction:column; align-items:center; justify-content:center; gap:20px;
+  background:#f8fafc; font-family:system-ui,'Noto Sans KR',sans-serif;
+}
+.row{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
+.btn{
+  padding:11px 20px; font-size:15px; border-radius:10px;
+  cursor:pointer; border:2px solid transparent; transition:.15s;
+}
+.solid{ background:#6366f1; color:#fff; }
+.solid:hover{ background:#4f46e5; }
+.outline{ background:#fff; color:#4f46e5; border-color:#6366f1; }
+.outline:hover{ background:#eef2ff; }
+.ghost{ background:transparent; color:#4f46e5; }
+.ghost:hover{ background:#eef2ff; }
+.pill{ background:#0f172a; color:#fff; border-radius:999px; }
+.grad{ background:linear-gradient(135deg,#6366f1,#ec4899); color:#fff; }
+.grad:hover{ filter:brightness(1.08); }`,
+        js:`document.querySelectorAll('.btn').forEach(function(b){
+  b.addEventListener('click', function(){
+    console.log('"' + b.textContent + '" 버튼을 눌렀어요');
+  });
+});` },
+
+      { id:'tabs', cat:'interaction', title:'탭 메뉴', desc:'버튼으로 내용을 전환하는 탭 UI',
+        html:`<div class="tabs-wrap">
+  <div class="tabbar">
+    <button class="tab on" data-i="0">소개</button>
+    <button class="tab" data-i="1">기능</button>
+    <button class="tab" data-i="2">문의</button>
+  </div>
+  <div class="panel on">안녕하세요! 코딩 캔버스 소개 탭입니다.</div>
+  <div class="panel">실행·미리보기·콘솔 기능을 제공해요.</div>
+  <div class="panel">문의: chichiboo@example.com</div>
+</div>`,
+        css:`body{
+  margin:0; padding:30px; background:#f1f5f9;
+  font-family:system-ui,'Noto Sans KR',sans-serif;
+}
+.tabs-wrap{ max-width:420px; margin:0 auto; }
+.tabbar{ display:flex; gap:4px; border-bottom:2px solid #e2e8f0; }
+.tab{
+  border:0; background:transparent; padding:10px 16px; cursor:pointer;
+  font-size:14px; color:#64748b; border-bottom:2px solid transparent; margin-bottom:-2px;
+}
+.tab.on{ color:#4f46e5; border-bottom-color:#4f46e5; font-weight:700; }
+.panel{ display:none; padding:20px 4px; color:#0f172a; line-height:1.6; }
+.panel.on{ display:block; }`,
+        js:`const tabs = document.querySelectorAll('.tab');
+const panels = document.querySelectorAll('.panel');
+tabs.forEach(function(tab){
+  tab.addEventListener('click', function(){
+    const i = Number(tab.dataset.i);
+    tabs.forEach(function(t){ t.classList.remove('on'); });
+    panels.forEach(function(p){ p.classList.remove('on'); });
+    tab.classList.add('on');
+    panels[i].classList.add('on');
+    console.log(i + '번 탭으로 이동');
+  });
+});` },
+
+      { id:'accordion', cat:'interaction', title:'FAQ 아코디언', desc:'클릭하면 답이 펼쳐지는 자주 묻는 질문',
+        html:`<h1>자주 묻는 질문</h1>
+<div class="faq">
+  <div class="item">
+    <button class="q">코딩 캔버스는 무료인가요?</button>
+    <div class="a">네, 누구나 무료로 사용할 수 있어요.</div>
+  </div>
+  <div class="item">
+    <button class="q">코드는 저장되나요?</button>
+    <div class="a">브라우저에 자동 저장되어 다시 와도 이어집니다.</div>
+  </div>
+  <div class="item">
+    <button class="q">모바일에서도 되나요?</button>
+    <div class="a">네, 휴대폰·태블릿에서도 동작해요.</div>
+  </div>
+</div>`,
+        css:`body{
+  margin:0; padding:24px; background:#fff; color:#0f172a;
+  font-family:system-ui,'Noto Sans KR',sans-serif;
+}
+.faq{ max-width:440px; margin:0 auto; }
+.item{ border:1px solid #e2e8f0; border-radius:10px; margin-bottom:10px; overflow:hidden; }
+.q{
+  width:100%; text-align:left; background:#f8fafc; border:0;
+  padding:14px 16px; font-size:15px; cursor:pointer; font-weight:600;
+}
+.q:hover{ background:#eef2ff; }
+.a{ max-height:0; overflow:hidden; transition:max-height .25s, padding .25s; padding:0 16px; color:#475569; }
+.item.open .a{ max-height:120px; padding:12px 16px; }`,
+        js:`document.querySelectorAll('.q').forEach(function(q){
+  q.addEventListener('click', function(){
+    const item = q.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.item').forEach(function(it){ it.classList.remove('open'); });
+    if(!isOpen){ item.classList.add('open'); console.log('열림:', q.textContent); }
+  });
+});` },
+
+      { id:'spinner', cat:'anim', title:'로딩 스피너', desc:'@keyframes로 만드는 CSS 회전 애니메이션',
+        html:`<div class="wrap">
+  <div class="spinner"></div>
+  <div class="dots"><span></span><span></span><span></span></div>
+  <p>불러오는 중...</p>
+</div>`,
+        css:`body{
+  margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:#0f172a; color:#e2e8f0; font-family:system-ui,'Noto Sans KR',sans-serif;
+}
+.wrap{ text-align:center; display:flex; flex-direction:column; align-items:center; gap:22px; }
+.spinner{
+  width:54px; height:54px; border-radius:50%;
+  border:6px solid #1e293b; border-top-color:#818cf8;
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{ to{ transform:rotate(360deg); } }
+.dots{ display:flex; gap:10px; }
+.dots span{
+  width:14px; height:14px; border-radius:50%; background:#818cf8;
+  animation:bounce .6s ease-in-out infinite;
+}
+.dots span:nth-child(2){ animation-delay:.15s; }
+.dots span:nth-child(3){ animation-delay:.3s; }
+@keyframes bounce{ 0%,100%{ transform:translateY(0); opacity:.5; } 50%{ transform:translateY(-14px); opacity:1; } }`,
+        js:`console.log('CSS 애니메이션은 JS 없이도 동작해요!');
+let n = 0;
+setInterval(function(){ n++; if(n<=3) console.log('로딩 ' + n + '초...'); }, 1000);` },
+
+      { id:'clock', cat:'anim', title:'디지털 시계', desc:'setInterval로 1초마다 시간을 갱신',
+        html:`<div class="clock">
+  <div class="time" id="time">00:00:00</div>
+  <div class="date" id="date">날짜</div>
+</div>`,
+        css:`body{
+  margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,#1e1b4b,#312e81);
+  font-family:system-ui,'Noto Sans KR',sans-serif;
+}
+.clock{ text-align:center; color:#fff; }
+.time{ font-size:64px; font-weight:800; letter-spacing:2px; font-variant-numeric:tabular-nums; }
+.date{ margin-top:10px; font-size:16px; color:#c7d2fe; }`,
+        js:`const timeEl = document.getElementById('time');
+const dateEl = document.getElementById('date');
+function pad(n){ return String(n).padStart(2,'0'); }
+function tick(){
+  const now = new Date();
+  timeEl.textContent = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+  const days = ['일','월','화','수','목','금','토'];
+  dateEl.textContent = now.getFullYear() + '년 ' + (now.getMonth()+1) + '월 ' + now.getDate() + '일 (' + days[now.getDay()] + ')';
+}
+tick();
+setInterval(tick, 1000);
+console.log('시계가 시작되었습니다.');` },
+
+      { id:'rps', cat:'game', title:'가위바위보', desc:'조건문과 랜덤으로 만드는 미니 게임',
+        html:`<div class="game">
+  <h1>가위바위보</h1>
+  <div class="choices">
+    <button onclick="play('가위')">✌️ 가위</button>
+    <button onclick="play('바위')">✊ 바위</button>
+    <button onclick="play('보')">✋ 보</button>
+  </div>
+  <p class="result" id="result">버튼을 골라보세요!</p>
+  <p class="score" id="score">승 0 · 무 0 · 패 0</p>
+</div>`,
+        css:`body{
+  margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:#fef3c7; font-family:system-ui,'Noto Sans KR',sans-serif;
+}
+.game{ text-align:center; }
+h1{ color:#92400e; }
+.choices{ display:flex; gap:10px; justify-content:center; margin:18px 0; }
+.choices button{
+  font-size:16px; padding:14px 18px; border:0; border-radius:14px;
+  background:#fff; box-shadow:0 4px 10px rgba(146,64,14,.15); cursor:pointer;
+}
+.choices button:hover{ transform:translateY(-3px); }
+.result{ font-size:22px; font-weight:800; min-height:30px; color:#78350f; }
+.score{ color:#b45309; }`,
+        js:`let win=0, draw=0, lose=0;
+const hands = ['가위','바위','보'];
+const result = document.getElementById('result');
+const score = document.getElementById('score');
+function play(me){
+  const cpu = hands[Math.floor(Math.random()*3)];
+  let msg;
+  if(me === cpu){ msg = '비겼어요! (컴퓨터: ' + cpu + ')'; draw++; }
+  else if((me==='가위'&&cpu==='보')||(me==='바위'&&cpu==='가위')||(me==='보'&&cpu==='바위')){
+    msg = '이겼어요! (컴퓨터: ' + cpu + ')'; win++;
+  } else { msg = '졌어요... (컴퓨터: ' + cpu + ')'; lose++; }
+  result.textContent = msg;
+  score.textContent = '승 ' + win + ' · 무 ' + draw + ' · 패 ' + lose;
+  console.log('나:' + me + ' / 컴퓨터:' + cpu + ' → ' + msg);
+}` },
+
+      { id:'guess', cat:'game', title:'숫자 맞히기', desc:'1~100 사이 숫자를 추리하는 게임',
+        html:`<div class="game">
+  <h1>숫자 맞히기</h1>
+  <p>1부터 100 사이의 숫자를 맞혀보세요.</p>
+  <div class="row">
+    <input id="num" type="number" min="1" max="100" placeholder="숫자 입력">
+    <button onclick="guess()">확인</button>
+  </div>
+  <p class="hint" id="hint">시도: 0회</p>
+  <button class="again" onclick="reset()">새 게임</button>
+</div>`,
+        css:`body{
+  margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:#ecfeff; font-family:system-ui,'Noto Sans KR',sans-serif;
+}
+.game{ text-align:center; background:#fff; padding:28px; border-radius:18px; box-shadow:0 12px 30px rgba(8,145,178,.15); }
+h1{ color:#0e7490; margin-top:0; }
+.row{ display:flex; gap:8px; justify-content:center; margin:14px 0; }
+input{ width:130px; padding:10px; border:1px solid #a5f3fc; border-radius:10px; font-size:16px; text-align:center; }
+button{ background:#06b6d4; color:#fff; border:0; padding:10px 16px; border-radius:10px; cursor:pointer; }
+button:hover{ background:#0891b2; }
+.again{ background:#64748b; margin-top:8px; }
+.hint{ font-size:18px; font-weight:700; min-height:26px; color:#155e75; }`,
+        js:`let answer, tries;
+function reset(){
+  answer = Math.floor(Math.random()*100) + 1;
+  tries = 0;
+  document.getElementById('hint').textContent = '시도: 0회';
+  document.getElementById('num').value = '';
+  console.log('새 게임 시작! (정답은 콘솔에 숨겨둘게요)');
+}
+function guess(){
+  const v = Number(document.getElementById('num').value);
+  if(!v){ return; }
+  tries++;
+  const hint = document.getElementById('hint');
+  if(v === answer){ hint.textContent = '정답! ' + tries + '번 만에 맞혔어요 🎉'; }
+  else if(v < answer){ hint.textContent = '더 큰 수예요 ⬆️ (시도: ' + tries + '회)'; }
+  else { hint.textContent = '더 작은 수예요 ⬇️ (시도: ' + tries + '회)'; }
+  console.log(tries + '번째 시도: ' + v);
+}
+reset();` }
     ];
 
+    function makeExCard(ex){
+      const card = document.createElement('div'); card.className = 'excard';
+      const t = document.createElement('div'); t.className = 'extitle'; t.textContent = ex.title;
+      const d = document.createElement('div'); d.className = 'exdesc'; d.textContent = ex.desc;
+      const b = document.createElement('button'); b.className = 'btn primary'; b.textContent = '불러오기';
+      b.onclick = ()=>loadExample(ex.id);
+      card.append(t, d, b);
+      return card;
+    }
     function renderExamples(){
       el.examplesGrid.innerHTML = '';
-      EXAMPLES.forEach(ex=>{
-        const card = document.createElement('div'); card.className = 'excard';
-        const t = document.createElement('div'); t.className = 'extitle'; t.textContent = ex.title;
-        const d = document.createElement('div'); d.className = 'exdesc'; d.textContent = ex.desc;
-        const b = document.createElement('button'); b.className = 'btn primary'; b.textContent = '불러오기';
-        b.onclick = ()=>loadExample(ex.id);
-        card.append(t, d, b);
-        el.examplesGrid.appendChild(card);
+      EX_CATS.forEach(cat=>{
+        const items = EXAMPLES.filter(ex=>ex.cat===cat.id);
+        if(!items.length) return;
+        const section = document.createElement('div'); section.className = 'excat';
+        const head = document.createElement('div'); head.className = 'excat-head';
+        const title = document.createElement('span'); title.className = 'excat-title'; title.textContent = cat.label;
+        const desc = document.createElement('span'); desc.className = 'excat-desc'; desc.textContent = cat.desc;
+        head.append(title, desc);
+        const grid = document.createElement('div'); grid.className = 'examples';
+        items.forEach(ex=> grid.appendChild(makeExCard(ex)));
+        section.append(head, grid);
+        el.examplesGrid.appendChild(section);
       });
     }
     function loadExample(id){
@@ -1225,6 +1548,13 @@ function change(){
         };
         reader.readAsText(file); e.target.value='';
       });
+
+      // 콘솔 헤더: 키보드로 펼치기/접기 (Enter / Space)
+      if(el.consoleHead){
+        el.consoleHead.addEventListener('keydown', (e)=>{
+          if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggleConsole(); }
+        });
+      }
 
       // 단축키: 실행
       document.addEventListener('keydown', (e)=>{
